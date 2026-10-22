@@ -23,18 +23,12 @@ st.set_page_config(
 # 2. 高级自定义 CSS 美化
 st.markdown("""
 <style>
-    /* 强制全局浅色背景 + 深色文字，防止夜间模式白字白底 */
+    /* 全局基础字体，不再强制颜色和背景，交给 Streamlit 主题自适应 */
     .stApp { 
-        background-color: #f4f9f9 !important; 
-        color: #31333F !important;
         font-family: 'Segoe UI', sans-serif; 
     }
-    
-    /* 强制所有标题和段落使用深色文字 */
-    h1, h2, h3, h4, h5, h6, p, span, label {
-        color: #31333F !important;
-    }
 
+    /* 顶部 Banner：深蓝背景，强制内部文字为白色 */
     .main-header {
         display: flex;
         justify-content: space-between; 
@@ -47,13 +41,13 @@ st.markdown("""
         margin-bottom: 30px;
     }
     
-    /* Header内部文字保持白色 */
     .main-header h1 { 
         color: white !important; 
         font-size: 2.5rem; 
         margin-bottom: 10px; 
         text-shadow: 2px 2px 4px rgba(0,0,0,0.3); 
     }
+    
     .main-header p { 
         color: white !important; 
         font-size: 1.1rem; 
@@ -69,25 +63,22 @@ st.markdown("""
         object-fit: contain;  
         margin: 0 20px;       
     }
+    
     @media (max-width: 768px) {
         .main-header { flex-direction: column; padding: 20px; }
         .logo { height: 60px; margin: 10px 0; }
         .main-header h1 { font-size: 1.8rem; }
     }
     
-    /* 上传区域样式覆盖夜间模式 */
+    /* 文件上传区域边框美化，背景保持透明/自适应 */
     [data-testid="stFileUploadDropzone"] { 
         border: 2px dashed #005c97 !important; 
         border-radius: 15px; 
-        background-color: #ffffff !important; 
         transition: all 0.3s ease; 
     }
     [data-testid="stFileUploadDropzone"]:hover { 
-        background-color: #e6f2f5 !important; 
+        background-color: rgba(0, 92, 151, 0.1) !important; 
         border-color: #363795 !important; 
-    }
-    [data-testid="stFileUploadDropzone"] * {
-        color: #31333F !important;
     }
     
     .element-container img { border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
