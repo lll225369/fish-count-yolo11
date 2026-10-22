@@ -165,7 +165,7 @@ elif mode == "📂 批量图片检测":
     st.markdown("### 📂 文件夹内多图批量识别与统计")
     st.caption("💡 操作提示：点击下方上传区域，按 `Ctrl+A` 全选文件夹内的所有图片。")
     
-    uploaded_files = st.file_uploader("请批量选择/拖拽文件夹内的图片", type=["jpg", "jpeg", "png"], accept_multiple_files=True, max_bytes=10*1024*1024)
+    uploaded_files = st.file_uploader("请批量选择/拖拽文件夹内的图片", type=["jpg", "jpeg", "png"], accept_multiple_files=True)
     
     if uploaded_files:
         st.info(f"📁 成功加载 {len(uploaded_files)} 张图片，等待执行批量分析。")
