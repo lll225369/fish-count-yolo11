@@ -95,22 +95,26 @@ with st.sidebar:
     st.divider()
     st.markdown("### ⚙️ 核心检测参数")
     
-    # --- 置信度双向联动 ---
+    # --- 置信度双向完美联动 ---
     if "conf_val" not in st.session_state:
         st.session_state.conf_val = 0.50
+        st.session_state.conf_slider = 0.50
+        st.session_state.conf_num = 0.50
 
     def sync_conf_slider():
-        st.session_state.conf_val = st.session_state.conf_slider_widget
+        st.session_state.conf_val = st.session_state.conf_slider
+        st.session_state.conf_num = st.session_state.conf_slider  # 同步数字框
 
     def sync_conf_num():
-        st.session_state.conf_val = st.session_state.conf_num_widget
+        st.session_state.conf_val = st.session_state.conf_num
+        st.session_state.conf_slider = st.session_state.conf_num  # 同步滑块
 
     st.markdown("**置信度阈值 (Confidence)**")
     col1, col2 = st.columns([3, 1])
     with col1:
-        st.slider("Conf", min_value=0.01, max_value=1.0, value=st.session_state.conf_val, step=0.05, label_visibility="collapsed", key="conf_slider_widget", on_change=sync_conf_slider)
+        st.slider("Conf", min_value=0.01, max_value=1.0, value=st.session_state.conf_val, step=0.05, label_visibility="collapsed", key="conf_slider", on_change=sync_conf_slider)
     with col2:
-        st.number_input("ConfNum", min_value=0.01, max_value=1.0, value=st.session_state.conf_val, step=0.05, format="%.2f", label_visibility="collapsed", key="conf_num_widget", on_change=sync_conf_num)
+        st.number_input("ConfNum", min_value=0.01, max_value=1.0, value=st.session_state.conf_val, step=0.05, format="%.2f", label_visibility="collapsed", key="conf_num", on_change=sync_conf_num)
     
     conf_threshold = st.session_state.conf_val
 
@@ -126,46 +130,70 @@ with st.sidebar:
         if video_mode == "小目标（SAHI 切片）":
             st.markdown("---")
             
-            # --- 切片宽度双向联动 ---
+            # --- 切片宽度双向完美联动 ---
             if "slice_w_val" not in st.session_state:
                 st.session_state.slice_w_val = 512
-            def sync_w_slider(): st.session_state.slice_w_val = st.session_state.w_slider_widget
-            def sync_w_num(): st.session_state.slice_w_val = st.session_state.w_num_widget
-            
+                st.session_state.w_slider = 512
+                st.session_state.w_num = 512
+
+            def sync_w_slider():
+                st.session_state.slice_w_val = st.session_state.w_slider
+                st.session_state.w_num = st.session_state.w_slider
+
+            def sync_w_num():
+                st.session_state.slice_w_val = st.session_state.w_num
+                st.session_state.w_slider = st.session_state.w_num
+
             st.markdown("**切片宽度 (Slice Width)**")
             c1, c2 = st.columns([3, 1])
             with c1:
-                st.slider("W", min_value=256, max_value=1024, value=st.session_state.slice_w_val, step=128, label_visibility="collapsed", key="w_slider_widget", on_change=sync_w_slider)
+                st.slider("W", min_value=256, max_value=1024, value=st.session_state.slice_w_val, step=128, label_visibility="collapsed", key="w_slider", on_change=sync_w_slider)
             with c2:
-                st.number_input("WNum", min_value=256, max_value=1024, value=st.session_state.slice_w_val, step=128, label_visibility="collapsed", key="w_num_widget", on_change=sync_w_num)
+                st.number_input("WNum", min_value=256, max_value=1024, value=st.session_state.slice_w_val, step=128, label_visibility="collapsed", key="w_num", on_change=sync_w_num)
             slice_width = st.session_state.slice_w_val
 
-            # --- 切片高度双向联动 ---
+            # --- 切片高度双向完美联动 ---
             if "slice_h_val" not in st.session_state:
                 st.session_state.slice_h_val = 512
-            def sync_h_slider(): st.session_state.slice_h_val = st.session_state.h_slider_widget
-            def sync_h_num(): st.session_state.slice_h_val = st.session_state.h_num_widget
+                st.session_state.h_slider = 512
+                st.session_state.h_num = 512
+
+            def sync_h_slider():
+                st.session_state.slice_h_val = st.session_state.h_slider
+                st.session_state.h_num = st.session_state.h_slider
+
+            def sync_h_num():
+                st.session_state.slice_h_val = st.session_state.h_num
+                st.session_state.h_slider = st.session_state.h_num
 
             st.markdown("**切片高度 (Slice Height)**")
             c1, c2 = st.columns([3, 1])
             with c1:
-                st.slider("H", min_value=256, max_value=1024, value=st.session_state.slice_h_val, step=128, label_visibility="collapsed", key="h_slider_widget", on_change=sync_h_slider)
+                st.slider("H", min_value=256, max_value=1024, value=st.session_state.slice_h_val, step=128, label_visibility="collapsed", key="h_slider", on_change=sync_h_slider)
             with c2:
-                st.number_input("HNum", min_value=256, max_value=1024, value=st.session_state.slice_h_val, step=128, label_visibility="collapsed", key="h_num_widget", on_change=sync_h_num)
+                st.number_input("HNum", min_value=256, max_value=1024, value=st.session_state.slice_h_val, step=128, label_visibility="collapsed", key="h_num", on_change=sync_h_num)
             slice_height = st.session_state.slice_h_val
 
-            # --- 重叠率双向联动 ---
+            # --- 重叠率双向完美联动 ---
             if "overlap_val" not in st.session_state:
                 st.session_state.overlap_val = 0.20
-            def sync_o_slider(): st.session_state.overlap_val = st.session_state.o_slider_widget
-            def sync_o_num(): st.session_state.overlap_val = st.session_state.o_num_widget
+                st.session_state.o_slider = 0.20
+                st.session_state.o_num = 0.20
+
+            def sync_o_slider():
+                st.session_state.overlap_val = st.session_state.o_slider
+                st.session_state.o_num = st.session_state.o_slider
+
+            def sync_o_num():
+                st.session_state.overlap_val = st.session_state.o_num
+                st.session_state.o_slider = st.session_state.o_num
 
             st.markdown("**重叠率 (Overlap Ratio)**")
             c1, c2 = st.columns([3, 1])
             with c1:
-                st.slider("O", min_value=0.1, max_value=0.5, value=st.session_state.overlap_val, step=0.05, label_visibility="collapsed", key="o_slider_widget", on_change=sync_o_slider)
+                st.slider("O", min_value=0.1, max_value=0.5, value=st.session_state.overlap_val, step=0.05, label_visibility="collapsed", key="o_slider", on_change=sync_o_slider)
             with c2:
-                st.number_input("ONum", min_value=0.1, max_value=0.5, value=st.session_state.overlap_val, step=0.05, format="%.2f", label_visibility="collapsed", key="o_num_widget", on_change=sync_o_num)
+                st.number_input("ONum", min_value=0.1, max_value=0.5, value=st.session_state.overlap_val, step=0.05, format="%.2f", label_visibility="collapsed", key="o_num", on_change=sync_o_num)
             overlap = st.session_state.overlap_val
 
 # --- 提取通用预测逻辑（支持切片或整图） ---
