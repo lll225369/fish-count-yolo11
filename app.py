@@ -58,7 +58,7 @@ st.markdown("""
 
 # =========================================================================
 # 3. 渲染顶部 Banner（带左右校徽）
-# ⚠️【重要修改点】请把你准备好的 Base64 代码分别粘贴到下面两个三引号 """ 之间！
+# ⚠️ 请把你的 Base64 代码粘贴到下面两个三引号之间！
 # =========================================================================
 logo_left_url = """data:image/png;base64,在这里粘贴左校徽的Base64代码"""
 logo_right_url = """data:image/png;base64,在这里粘贴右校徽的Base64代码"""
@@ -95,13 +95,24 @@ with st.sidebar:
     st.divider()
     st.markdown("### ⚙️ 核心检测参数")
     
-    # --- 置信度：滑块 + 输入框 ---
+    # --- 置信度双向联动 ---
+    if "conf_val" not in st.session_state:
+        st.session_state.conf_val = 0.50
+
+    def sync_conf_slider():
+        st.session_state.conf_val = st.session_state.conf_slider_widget
+
+    def sync_conf_num():
+        st.session_state.conf_val = st.session_state.conf_num_widget
+
     st.markdown("**置信度阈值 (Confidence)**")
     col1, col2 = st.columns([3, 1])
     with col1:
-        conf_slider = st.slider("Conf", min_value=0.01, max_value=1.0, value=0.50, step=0.05, label_visibility="collapsed")
+        st.slider("Conf", min_value=0.01, max_value=1.0, value=st.session_state.conf_val, step=0.05, label_visibility="collapsed", key="conf_slider_widget", on_change=sync_conf_slider)
     with col2:
-        conf_threshold = st.number_input("ConfNum", min_value=0.01, max_value=1.0, value=conf_slider, step=0.05, format="%.2f", label_visibility="collapsed")
+        st.number_input("ConfNum", min_value=0.01, max_value=1.0, value=st.session_state.conf_val, step=0.05, format="%.2f", label_visibility="collapsed", key="conf_num_widget", on_change=sync_conf_num)
+    
+    conf_threshold = st.session_state.conf_val
 
     # 视频模式特有的设置
     if mode == "🎬 视频智能追踪":
@@ -114,26 +125,48 @@ with st.sidebar:
         
         if video_mode == "小目标（SAHI 切片）":
             st.markdown("---")
+            
+            # --- 切片宽度双向联动 ---
+            if "slice_w_val" not in st.session_state:
+                st.session_state.slice_w_val = 512
+            def sync_w_slider(): st.session_state.slice_w_val = st.session_state.w_slider_widget
+            def sync_w_num(): st.session_state.slice_w_val = st.session_state.w_num_widget
+            
             st.markdown("**切片宽度 (Slice Width)**")
             c1, c2 = st.columns([3, 1])
             with c1:
-                slice_w_slider = st.slider("W", min_value=256, max_value=1024, value=512, step=128, label_visibility="collapsed")
+                st.slider("W", min_value=256, max_value=1024, value=st.session_state.slice_w_val, step=128, label_visibility="collapsed", key="w_slider_widget", on_change=sync_w_slider)
             with c2:
-                slice_width = st.number_input("WNum", min_value=256, max_value=1024, value=slice_w_slider, step=128, label_visibility="collapsed")
-            
+                st.number_input("WNum", min_value=256, max_value=1024, value=st.session_state.slice_w_val, step=128, label_visibility="collapsed", key="w_num_widget", on_change=sync_w_num)
+            slice_width = st.session_state.slice_w_val
+
+            # --- 切片高度双向联动 ---
+            if "slice_h_val" not in st.session_state:
+                st.session_state.slice_h_val = 512
+            def sync_h_slider(): st.session_state.slice_h_val = st.session_state.h_slider_widget
+            def sync_h_num(): st.session_state.slice_h_val = st.session_state.h_num_widget
+
             st.markdown("**切片高度 (Slice Height)**")
             c1, c2 = st.columns([3, 1])
             with c1:
-                slice_h_slider = st.slider("H", min_value=256, max_value=1024, value=512, step=128, label_visibility="collapsed")
+                st.slider("H", min_value=256, max_value=1024, value=st.session_state.slice_h_val, step=128, label_visibility="collapsed", key="h_slider_widget", on_change=sync_h_slider)
             with c2:
-                slice_height = st.number_input("HNum", min_value=256, max_value=1024, value=slice_h_slider, step=128, label_visibility="collapsed")
+                st.number_input("HNum", min_value=256, max_value=1024, value=st.session_state.slice_h_val, step=128, label_visibility="collapsed", key="h_num_widget", on_change=sync_h_num)
+            slice_height = st.session_state.slice_h_val
+
+            # --- 重叠率双向联动 ---
+            if "overlap_val" not in st.session_state:
+                st.session_state.overlap_val = 0.20
+            def sync_o_slider(): st.session_state.overlap_val = st.session_state.o_slider_widget
+            def sync_o_num(): st.session_state.overlap_val = st.session_state.o_num_widget
 
             st.markdown("**重叠率 (Overlap Ratio)**")
             c1, c2 = st.columns([3, 1])
             with c1:
-                overlap_slider = st.slider("O", min_value=0.1, max_value=0.5, value=0.2, step=0.05, label_visibility="collapsed")
+                st.slider("O", min_value=0.1, max_value=0.5, value=st.session_state.overlap_val, step=0.05, label_visibility="collapsed", key="o_slider_widget", on_change=sync_o_slider)
             with c2:
-                overlap = st.number_input("ONum", min_value=0.1, max_value=0.5, value=overlap_slider, step=0.05, format="%.2f", label_visibility="collapsed")
+                st.number_input("ONum", min_value=0.1, max_value=0.5, value=st.session_state.overlap_val, step=0.05, format="%.2f", label_visibility="collapsed", key="o_num_widget", on_change=sync_o_num)
+            overlap = st.session_state.overlap_val
 
 # --- 提取通用预测逻辑（支持切片或整图） ---
 def predict_frame(frame_rgb, use_sahi=False):
@@ -220,7 +253,6 @@ elif mode == "📂 批量图片检测":
                 del img, res, plot_img
                 gc.collect()
             
-            # 【核心修改点】将结果存入 session_state 供后续预览翻页使用
             st.session_state["batch_results"] = image_results_bytes
             st.session_state["current_preview_index"] = 0
             
@@ -262,7 +294,7 @@ elif mode == "📂 批量图片检测":
                     use_container_width=True
                 )
 
-    # ================= 图片翻页预览模块（独立于按钮外，确保重跑时不消失） =================
+    # ================= 图片翻页预览模块 =================
     if "batch_results" in st.session_state and st.session_state["batch_results"]:
         st.divider()
         st.markdown("#### 🔍 逐张查看预测结果")
@@ -270,23 +302,19 @@ elif mode == "📂 批量图片检测":
         results = st.session_state["batch_results"]
         total_images = len(results)
         
-        # 确保索引不越界
         if st.session_state["current_preview_index"] >= total_images:
             st.session_state["current_preview_index"] = 0
             
         current_idx = st.session_state["current_preview_index"]
         
-        # 控制区域
         col_btn_prev, col_select, col_btn_next = st.columns([1, 4, 1])
         
         with col_btn_prev:
-            # 点击上一张，索引减 1，如果小于 0 则循环到末尾
             if st.button("◀ 上一张", use_container_width=True):
                 st.session_state["current_preview_index"] = (current_idx - 1) % total_images
                 st.rerun()
                 
         with col_select:
-            # 下拉菜单，绑定到 session_state
             def on_select_change():
                 st.session_state["current_preview_index"] = st.session_state["selectbox_preview"]
 
@@ -301,12 +329,10 @@ elif mode == "📂 批量图片检测":
             )
             
         with col_btn_next:
-            # 点击下一张，索引加 1，如果超过总数则循环到开头
             if st.button("下一张 ▶", use_container_width=True):
                 st.session_state["current_preview_index"] = (current_idx + 1) % total_images
                 st.rerun()
                 
-        # 显示当前图片
         current_item = results[st.session_state["current_preview_index"]]
         st.image(
             current_item["bytes"], 
