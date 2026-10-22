@@ -20,7 +20,6 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-st.set_option('logger.level', 'error')
 
 # 2. 高级自定义 CSS 美化
 st.markdown("""
