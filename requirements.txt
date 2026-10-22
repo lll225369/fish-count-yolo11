@@ -1,9 +1,9 @@
 streamlit
 ultralytics
-Pillow
-opencv-python
-numpy
-pandas
 supervision
-xlsxwriter
 lapx
+opencv-python-headless
+pandas
+numpy
+xlsxwriter
+Pillow
