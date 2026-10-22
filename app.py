@@ -210,7 +210,7 @@ elif mode == "🎬 视频 SAHI 切片追踪":
             )
             
             tracker = ByteTrackTracker()
-            box_annotator = sv.BoundingBoxAnnotator(thickness=2)
+            box_annotator = sv.BoxAnnotator(thickness=2)
             label_annotator = sv.LabelAnnotator(text_scale=0.5, text_padding=2)
             
             out_path = tempfile.NamedTemporaryFile(delete=False, suffix='.mp4').name
