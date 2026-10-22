@@ -1,6 +1,6 @@
 streamlit
 ultralytics
-supervision
+supervision==0.27.0
 lapx
 opencv-python-headless
 pandas
