@@ -220,6 +220,10 @@ elif mode == "📂 批量图片检测":
                 del img, res, plot_img
                 gc.collect()
             
+            # 【核心修改点】将结果存入 session_state 供后续预览翻页使用
+            st.session_state["batch_results"] = image_results_bytes
+            st.session_state["current_preview_index"] = 0
+            
             st.success("✅ 批量检测全部完成！")
             st.metric(label="📊 本批次累计识别总鱼数", value=f"{total_fish_count} 条", delta=f"共分析 {len(uploaded_files)} 张图片")
             
@@ -257,27 +261,58 @@ elif mode == "📂 批量图片检测":
                     type="primary",
                     use_container_width=True
                 )
+
+    # ================= 图片翻页预览模块（独立于按钮外，确保重跑时不消失） =================
+    if "batch_results" in st.session_state and st.session_state["batch_results"]:
+        st.divider()
+        st.markdown("#### 🔍 逐张查看预测结果")
+        
+        results = st.session_state["batch_results"]
+        total_images = len(results)
+        
+        # 确保索引不越界
+        if st.session_state["current_preview_index"] >= total_images:
+            st.session_state["current_preview_index"] = 0
             
-            # ================= 逐张查看模块 =================
-            st.divider()
-            st.markdown("#### 🔍 逐张查看预测结果")
-            
-            # 用一个下拉框让用户选择想看哪张图
-            view_file = st.selectbox(
-                "选择要查看的图片：", 
-                options=[item["filename"] for item in image_results_bytes]
+        current_idx = st.session_state["current_preview_index"]
+        
+        # 控制区域
+        col_btn_prev, col_select, col_btn_next = st.columns([1, 4, 1])
+        
+        with col_btn_prev:
+            # 点击上一张，索引减 1，如果小于 0 则循环到末尾
+            if st.button("◀ 上一张", use_container_width=True):
+                st.session_state["current_preview_index"] = (current_idx - 1) % total_images
+                st.rerun()
+                
+        with col_select:
+            # 下拉菜单，绑定到 session_state
+            def on_select_change():
+                st.session_state["current_preview_index"] = st.session_state["selectbox_preview"]
+
+            st.selectbox(
+                "选择图片：", 
+                options=range(total_images),
+                format_func=lambda x: f"[{x+1}/{total_images}] {results[x]['filename']}",
+                index=current_idx,
+                key="selectbox_preview",
+                on_change=on_select_change,
+                label_visibility="collapsed"
             )
             
-            if view_file:
-                # 从保存的字典中找出对应的字节流
-                view_item = next(item for item in image_results_bytes if item["filename"] == view_file)
+        with col_btn_next:
+            # 点击下一张，索引加 1，如果超过总数则循环到开头
+            if st.button("下一张 ▶", use_container_width=True):
+                st.session_state["current_preview_index"] = (current_idx + 1) % total_images
+                st.rerun()
                 
-                # 显示图片
-                st.image(
-                    view_item["bytes"], 
-                    caption=f"文件名: {view_file}", 
-                    use_container_width=True
-                )
+        # 显示当前图片
+        current_item = results[st.session_state["current_preview_index"]]
+        st.image(
+            current_item["bytes"], 
+            caption=f"当前查看: {current_item['filename']}",
+            use_container_width=True
+        )
 
 elif mode == "🎬 视频智能追踪":
     st.markdown("### 📽️ 视频智能追踪")
