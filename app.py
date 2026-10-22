@@ -108,13 +108,20 @@ with st.sidebar:
     def sync_conf_num():
         st.session_state.conf_val = st.session_state.conf_num
         st.session_state.conf_slider = st.session_state.conf_num
+        
+    def reset_conf():
+        st.session_state.conf_val = 0.50
+        st.session_state.conf_slider = 0.50
+        st.session_state.conf_num = 0.50
 
     st.markdown("**置信度阈值 (Confidence)**")
-    col1, col2 = st.columns([3, 1])
+    col1, col2, col3 = st.columns([3, 1.5, 1])
     with col1:
         st.slider("Conf", min_value=0.01, max_value=1.0, value=st.session_state.conf_val, step=0.05, label_visibility="collapsed", key="conf_slider", on_change=sync_conf_slider)
     with col2:
         st.number_input("ConfNum", min_value=0.01, max_value=1.0, value=st.session_state.conf_val, step=0.05, format="%.2f", label_visibility="collapsed", key="conf_num", on_change=sync_conf_num)
+    with col3:
+        st.button("🔄", key="reset_conf_btn", on_click=reset_conf, help="恢复默认值 (0.50)")
     
     conf_threshold = st.session_state.conf_val
 
@@ -143,13 +150,20 @@ with st.sidebar:
             def sync_w_num():
                 st.session_state.slice_w_val = st.session_state.w_num
                 st.session_state.w_slider = st.session_state.w_num
+                
+            def reset_w():
+                st.session_state.slice_w_val = 512
+                st.session_state.w_slider = 512
+                st.session_state.w_num = 512
 
             st.markdown("**切片宽度 (Slice Width)**")
-            c1, c2 = st.columns([3, 1])
+            c1, c2, c3 = st.columns([3, 1.5, 1])
             with c1:
                 st.slider("W", min_value=256, max_value=1024, value=st.session_state.slice_w_val, step=128, label_visibility="collapsed", key="w_slider", on_change=sync_w_slider)
             with c2:
                 st.number_input("WNum", min_value=256, max_value=1024, value=st.session_state.slice_w_val, step=128, label_visibility="collapsed", key="w_num", on_change=sync_w_num)
+            with c3:
+                st.button("🔄", key="reset_w_btn", on_click=reset_w, help="恢复默认值 (512)")
             slice_width = st.session_state.slice_w_val
 
             # --- 切片高度双向完美联动 ---
@@ -165,13 +179,20 @@ with st.sidebar:
             def sync_h_num():
                 st.session_state.slice_h_val = st.session_state.h_num
                 st.session_state.h_slider = st.session_state.h_num
+                
+            def reset_h():
+                st.session_state.slice_h_val = 512
+                st.session_state.h_slider = 512
+                st.session_state.h_num = 512
 
             st.markdown("**切片高度 (Slice Height)**")
-            c1, c2 = st.columns([3, 1])
+            c1, c2, c3 = st.columns([3, 1.5, 1])
             with c1:
                 st.slider("H", min_value=256, max_value=1024, value=st.session_state.slice_h_val, step=128, label_visibility="collapsed", key="h_slider", on_change=sync_h_slider)
             with c2:
                 st.number_input("HNum", min_value=256, max_value=1024, value=st.session_state.slice_h_val, step=128, label_visibility="collapsed", key="h_num", on_change=sync_h_num)
+            with c3:
+                st.button("🔄", key="reset_h_btn", on_click=reset_h, help="恢复默认值 (512)")
             slice_height = st.session_state.slice_h_val
 
             # --- 重叠率双向完美联动 ---
@@ -187,13 +208,20 @@ with st.sidebar:
             def sync_o_num():
                 st.session_state.overlap_val = st.session_state.o_num
                 st.session_state.o_slider = st.session_state.o_num
+                
+            def reset_o():
+                st.session_state.overlap_val = 0.20
+                st.session_state.o_slider = 0.20
+                st.session_state.o_num = 0.20
 
             st.markdown("**重叠率 (Overlap Ratio)**")
-            c1, c2 = st.columns([3, 1])
+            c1, c2, c3 = st.columns([3, 1.5, 1])
             with c1:
                 st.slider("O", min_value=0.1, max_value=0.5, value=st.session_state.overlap_val, step=0.05, label_visibility="collapsed", key="o_slider", on_change=sync_o_slider)
             with c2:
                 st.number_input("ONum", min_value=0.1, max_value=0.5, value=st.session_state.overlap_val, step=0.05, format="%.2f", label_visibility="collapsed", key="o_num", on_change=sync_o_num)
+            with c3:
+                st.button("🔄", key="reset_o_btn", on_click=reset_o, help="恢复默认值 (0.20)")
             overlap = st.session_state.overlap_val
 
 # --- 提取通用预测逻辑（支持切片或整图） ---
@@ -219,7 +247,6 @@ if mode == "📷 单张图像检测":
     if up_img:
         img = Image.open(up_img)
         
-        # 如果更换了图片，清除旧的预测结果
         if "current_img_name" not in st.session_state or st.session_state.current_img_name != up_img.name:
             st.session_state.current_img_name = up_img.name
             st.session_state.single_pred_img = None
@@ -229,25 +256,21 @@ if mode == "📷 单张图像检测":
         with col1: 
             st.image(img, caption="原始图片", use_container_width=True)
         
-        # 提供一个预测/重新预测按钮
         if st.button("🚀 开始/重新预测", type="primary"):
             with st.spinner("正在推理中..."):
                 res = model(img, conf=conf_threshold)
                 count = len(res[0].boxes)
                 plot_img = Image.fromarray(cv2.cvtColor(res[0].plot(), cv2.COLOR_BGR2RGB))
                 
-                # 将结果存入 session_state
                 st.session_state.single_pred_img = plot_img
                 st.session_state.single_pred_count = count
         
-        # 如果已经有预测结果，进行显示
         if st.session_state.single_pred_img is not None:
             st.metric(label="📊 本次识别数量 (当前阈值: {:.2f})".format(conf_threshold), value=f"{st.session_state.single_pred_count} 条")
             
             with col2:
                 st.image(st.session_state.single_pred_img, caption="检测结果", use_container_width=True)
                 
-            # 下载功能
             img_buffer = io.BytesIO()
             st.session_state.single_pred_img.save(img_buffer, format="JPEG")
             st.download_button(
