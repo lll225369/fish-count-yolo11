@@ -103,11 +103,11 @@ with st.sidebar:
 
     def sync_conf_slider():
         st.session_state.conf_val = st.session_state.conf_slider
-        st.session_state.conf_num = st.session_state.conf_slider  # 同步数字框
+        st.session_state.conf_num = st.session_state.conf_slider
 
     def sync_conf_num():
         st.session_state.conf_val = st.session_state.conf_num
-        st.session_state.conf_slider = st.session_state.conf_num  # 同步滑块
+        st.session_state.conf_slider = st.session_state.conf_num
 
     st.markdown("**置信度阈值 (Confidence)**")
     col1, col2 = st.columns([3, 1])
@@ -215,27 +215,51 @@ def predict_frame(frame_rgb, use_sahi=False):
 if mode == "📷 单张图像检测":
     st.markdown("### 📸 单图识别与分析")
     up_img = st.file_uploader("请拖拽或选择单张图片", type=["jpg", "jpeg", "png"])
+    
     if up_img:
         img = Image.open(up_img)
-        res = model(img, conf=conf_threshold)
-        count = len(res[0].boxes)
-        st.metric(label="📊 本次识别数量", value=f"{count} 条")
         
-        plot_img = Image.fromarray(cv2.cvtColor(res[0].plot(), cv2.COLOR_BGR2RGB))
-        
+        # 如果更换了图片，清除旧的预测结果
+        if "current_img_name" not in st.session_state or st.session_state.current_img_name != up_img.name:
+            st.session_state.current_img_name = up_img.name
+            st.session_state.single_pred_img = None
+            st.session_state.single_pred_count = 0
+
         col1, col2 = st.columns(2)
-        with col1: st.image(img, caption="原始图片", use_container_width=True)
-        with col2: st.image(plot_img, caption="检测结果", use_container_width=True)
+        with col1: 
+            st.image(img, caption="原始图片", use_container_width=True)
+        
+        # 提供一个预测/重新预测按钮
+        if st.button("🚀 开始/重新预测", type="primary"):
+            with st.spinner("正在推理中..."):
+                res = model(img, conf=conf_threshold)
+                count = len(res[0].boxes)
+                plot_img = Image.fromarray(cv2.cvtColor(res[0].plot(), cv2.COLOR_BGR2RGB))
+                
+                # 将结果存入 session_state
+                st.session_state.single_pred_img = plot_img
+                st.session_state.single_pred_count = count
+        
+        # 如果已经有预测结果，进行显示
+        if st.session_state.single_pred_img is not None:
+            st.metric(label="📊 本次识别数量 (当前阈值: {:.2f})".format(conf_threshold), value=f"{st.session_state.single_pred_count} 条")
             
-        img_buffer = io.BytesIO()
-        plot_img.save(img_buffer, format="JPEG")
-        st.download_button(
-            label="📥 下载检测结果图",
-            data=img_buffer.getvalue(),
-            file_name=f"result_{up_img.name.rsplit('.', 1)[0]}.jpg",
-            mime="image/jpeg",
-            type="primary"
-        )
+            with col2:
+                st.image(st.session_state.single_pred_img, caption="检测结果", use_container_width=True)
+                
+            # 下载功能
+            img_buffer = io.BytesIO()
+            st.session_state.single_pred_img.save(img_buffer, format="JPEG")
+            st.download_button(
+                label="📥 下载检测结果图",
+                data=img_buffer.getvalue(),
+                file_name=f"result_{up_img.name.rsplit('.', 1)[0]}.jpg",
+                mime="image/jpeg",
+                type="primary"
+            )
+        else:
+            with col2:
+                st.info("👈 请调整好侧边栏参数后，点击“开始/重新预测”按钮")
 
 elif mode == "📂 批量图片检测":
     st.markdown("### 📂 文件夹内多图批量识别与统计")
