@@ -94,8 +94,8 @@ if mode == "📷 单张图像检测":
         st.metric(label="📊 本次识别数量", value=f"{count} 条")
         plot_img = Image.fromarray(cv2.cvtColor(res[0].plot(), cv2.COLOR_BGR2RGB))
         col1, col2 = st.columns(2)
-        with col1: st.image(img, caption="原始图片", use_column_width=True)
-        with col2: st.image(plot_img, caption="检测结果", use_column_width=True)
+        with col1: st.image(img, caption="原始图片", use_container_width=True)
+        with col2: st.image(plot_img, caption="检测结果", use_container_width=True)
 
 elif mode == "📂 批量图片检测":
     st.markdown("### 📂 文件夹内多图批量识别与统计")
