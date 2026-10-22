@@ -1,5 +1,6 @@
 streamlit
 ultralytics
+lapx
 opencv-python-headless==4.11.0.86
 pillow
 numpy
