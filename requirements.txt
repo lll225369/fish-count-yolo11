@@ -1,6 +1,6 @@
 streamlit
 ultralytics
-supervision==0.26.0
+supervision==0.30.4
 trackers
 lapx
 opencv-python-headless
