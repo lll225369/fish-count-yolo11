@@ -253,7 +253,7 @@ def predict_frame(frame_rgb, use_sahi=False):
     if use_sahi:
         overlap_w = int(slice_width * overlap)
         overlap_h = int(slice_height * overlap)
-        # 兼容返回类型
+        
         def slice_callback(img_slice):
             results = model(img_slice, conf=conf_threshold, verbose=False)
             res = results[0] if isinstance(results, list) else results
@@ -290,9 +290,10 @@ if mode == "📷 单张图像检测":
         if st.button("🚀 开始/重新预测", type="primary"):
             with st.spinner("正在推理中..."):
                 results = model(img, conf=conf_threshold)
-                # 兼容性增强：兼容返回 List 或单个对象
                 res = results[0] if isinstance(results, list) else results
-                count = len(res.boxes) if res.boxes is not None else 0
+                
+                # 【核心修复】直接使用 len(res) 获取目标数量
+                count = len(res)
                 plot_img = Image.fromarray(cv2.cvtColor(res.plot(), cv2.COLOR_BGR2RGB))
                 
                 st.session_state.single_pred_img = plot_img
@@ -337,9 +338,10 @@ elif mode == "📂 批量图片检测":
             for i, file in enumerate(uploaded_files):
                 img = Image.open(file)
                 results = model(img, conf=conf_threshold)
-                # 兼容性增强
                 res = results[0] if isinstance(results, list) else results
-                count = len(res.boxes) if res.boxes is not None else 0
+                
+                # 【核心修复】直接使用 len(res) 获取目标数量
+                count = len(res)
                 total_fish_count += count
                 
                 results_data.append({
