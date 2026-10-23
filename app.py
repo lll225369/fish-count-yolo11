@@ -205,10 +205,15 @@ elif banner_style == "🏫 自定义校徽 (需上传)":
 # --- 加载 YOLO 模型 ---
 @st.cache_resource
 def load_yolo_model():
-    # 【!!! 注意 !!!】如果你有自己的模型，请修改下面的 'yolo11n.pt' 为你的文件名
+    # 默认的 yolo11n.pt 是不认识鱼的！
+    # 如果你有自己训练的鱼类模型（例如 best.pt），请替换掉下面的名字！
     return YOLO('best.pt') 
 
-model = load_yolo_model()
+try:
+    model = load_yolo_model()
+except Exception as e:
+    st.error(f"模型加载失败，请确保你的模型文件（如 best.pt）已正确放置在项目目录中！错误信息：{e}")
+    st.stop()
 
 # 5. 侧边栏 —— 控制面板与参数
 with st.sidebar:
@@ -377,7 +382,6 @@ if mode == "📷 单张图像检测":
     up_img = st.file_uploader("请拖拽或选择单张图片", type=["jpg", "jpeg", "png"])
     
     if up_img:
-        # 【修复】强制转换为 RGB 模式，去掉透明通道，防止模型无法识别
         img = Image.open(up_img).convert('RGB')
         
         if "current_img_name" not in st.session_state or st.session_state.current_img_name != up_img.name:
@@ -403,6 +407,9 @@ if mode == "📷 单张图像检测":
         
         if st.session_state.single_pred_img is not None:
             st.metric(label="📊 本次识别数量 (当前阈值: {:.2f})".format(conf_threshold), value=f"{st.session_state.single_pred_count} 条")
+            
+            if st.session_state.single_pred_count == 0:
+                st.error("⚠️ 未检测到目标！请检查你是否使用了正确训练好的模型（如 best.pt）。")
             
             with col2:
                 st.image(st.session_state.single_pred_img, caption="检测结果", use_container_width=True)
@@ -438,7 +445,6 @@ elif mode == "📂 批量图片检测":
             image_results_bytes = []
             
             for i, file in enumerate(uploaded_files):
-                # 【修复】强制转换为 RGB 模式
                 img = Image.open(file).convert('RGB')
                 results = model(img, conf=conf_threshold)
                 res = results[0] if isinstance(results, list) else results
@@ -468,13 +474,30 @@ elif mode == "📂 批量图片检测":
                 del img, res, plot_img
                 gc.collect()
             
+            # 将结果保存到 session_state，防止因为点击下载而导致数据丢失
             st.session_state["batch_results"] = image_results_bytes
+            st.session_state["batch_df"] = pd.DataFrame(results_data)
+            st.session_state["batch_total_count"] = total_fish_count
+            st.session_state["batch_total_files"] = len(uploaded_files)
             st.session_state["current_preview_index"] = 0
             
-            st.success("✅ 批量检测全部完成！")
-            st.metric(label="📊 本批次累计识别总鱼数", value=f"{total_fish_count} 条", delta=f"共分析 {len(uploaded_files)} 张图片")
+            # 强制刷新以清除进度条和预览图的残留
+            st.rerun()
+        
+        # 无论是否刚点击了按钮，只要 session_state 有数据就展示结果（完美解决按钮消失问题）
+        if "batch_results" in st.session_state and st.session_state["batch_results"]:
+            df = st.session_state["batch_df"]
+            total_fish_count = st.session_state["batch_total_count"]
+            total_files = st.session_state["batch_total_files"]
+            image_results_bytes = st.session_state["batch_results"]
             
-            df = pd.DataFrame(results_data)
+            st.success("✅ 批量检测全部完成！")
+            
+            if total_fish_count == 0:
+                st.error("⚠️ 所有图片均未检测到目标！请立刻检查你是否使用了训练好的鱼类模型（如 best.pt）！")
+                
+            st.metric(label="📊 本批次累计识别总鱼数", value=f"{total_fish_count} 条", delta=f"共分析 {total_files} 张图片")
+            
             st.markdown("#### 📑 批量统计报表")
             st.dataframe(df, use_container_width=True)
             
@@ -507,59 +530,58 @@ elif mode == "📂 批量图片检测":
                     type="primary",
                     use_container_width=True
                 )
-
-    if "batch_results" in st.session_state and st.session_state["batch_results"]:
-        st.divider()
-        st.markdown("#### 🔍 逐张查看预测结果")
-        
-        results = st.session_state["batch_results"]
-        total_images = len(results)
-        
-        if st.session_state["current_preview_index"] >= total_images:
-            st.session_state["current_preview_index"] = 0
             
-        current_idx = st.session_state["current_preview_index"]
-        
-        col_btn_prev, col_select, col_btn_next = st.columns([1, 4, 1])
-        
-        with col_btn_prev:
-            if st.button("◀ 上一张", use_container_width=True):
-                st.session_state["current_preview_index"] = (current_idx - 1) % total_images
-                st.rerun()
+            st.divider()
+            st.markdown("#### 🔍 逐张查看预测结果")
+            
+            total_images = len(image_results_bytes)
+            
+            if st.session_state["current_preview_index"] >= total_images:
+                st.session_state["current_preview_index"] = 0
                 
-        with col_select:
-            def on_select_change():
-                st.session_state["current_preview_index"] = st.session_state["selectbox_preview"]
+            current_idx = st.session_state["current_preview_index"]
+            
+            col_btn_prev, col_select, col_btn_next = st.columns([1, 4, 1])
+            
+            with col_btn_prev:
+                if st.button("◀ 上一张", use_container_width=True):
+                    st.session_state["current_preview_index"] = (current_idx - 1) % total_images
+                    st.rerun()
+                    
+            with col_select:
+                def on_select_change():
+                    st.session_state["current_preview_index"] = st.session_state["selectbox_preview"]
 
-            st.selectbox(
-                "选择图片：", 
-                options=range(total_images),
-                format_func=lambda x: f"[{x+1}/{total_images}] {results[x]['filename']}",
-                index=current_idx,
-                key="selectbox_preview",
-                on_change=on_select_change,
-                label_visibility="collapsed"
+                st.selectbox(
+                    "选择图片：", 
+                    options=range(total_images),
+                    format_func=lambda x: f"[{x+1}/{total_images}] {image_results_bytes[x]['filename']}",
+                    index=current_idx,
+                    key="selectbox_preview",
+                    on_change=on_select_change,
+                    label_visibility="collapsed"
+                )
+                
+            with col_btn_next:
+                if st.button("下一张 ▶", use_container_width=True):
+                    st.session_state["current_preview_index"] = (current_idx + 1) % total_images
+                    st.rerun()
+                    
+            current_item = image_results_bytes[st.session_state["current_preview_index"]]
+            
+            st.image(
+                current_item["bytes"], 
+                caption=f"当前查看: {current_item['filename']}",
+                use_container_width=True
             )
             
-        with col_btn_next:
-            if st.button("下一张 ▶", use_container_width=True):
-                st.session_state["current_preview_index"] = (current_idx + 1) % total_images
-                st.rerun()
-                
-        current_item = results[st.session_state["current_preview_index"]]
-        
-        st.image(
-            current_item["bytes"], 
-            caption=f"当前查看: {current_item['filename']}",
-            use_container_width=True
-        )
-        
-        st.download_button(
-            label=f"📥 下载当前单张结果图 ({current_item['filename']})",
-            data=current_item["bytes"],
-            file_name=current_item["filename"],
-            mime="image/jpeg"
-        )
+            st.download_button(
+                label=f"📥 下载当前单张结果图 ({current_item['filename']})",
+                data=current_item["bytes"],
+                file_name=current_item["filename"],
+                mime="image/jpeg",
+                key="download_single_result"
+            )
 
 elif mode == "🎬 视频智能追踪":
     st.markdown("### 📽️ 视频智能追踪")
@@ -653,6 +675,10 @@ elif mode == "🎬 视频智能追踪":
             
             progress_bar.progress(1.0, text="✅ 视频处理完成！")
             st.success("视频追踪处理完毕！")
+            
+            if total_fish_count == 0:
+                st.error("⚠️ 视频中未追踪到任何目标！请确认你的模型是否为鱼类模型！")
+                
             st.metric(label="📊 追踪统计（累加值）", value=f"共追踪到 {total_fish_count} 次目标出现")
             
             with open(out_path, "rb") as f:
