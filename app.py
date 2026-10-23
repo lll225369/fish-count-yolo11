@@ -110,7 +110,7 @@ with st.sidebar:
             "⏱️ 动态信息看板",
             "🏫 自定义校徽 (需上传)"
         ],
-        index=3 # 默认展示你截图的样式
+        index=3 # 默认展示动态信息看板样式
     )
     
     left_logo_b64 = ""
@@ -169,7 +169,7 @@ elif banner_style == "📊 极客状态监控":
     st.markdown(html_code, unsafe_allow_html=True)
 
 elif banner_style == "🎯 科技矢量图标":
-    # 放大并降低图标透明度，作为背景装饰，不再抢夺视觉焦点
+    # 放大并降低图标透明度，作为背景装饰
     html_code = textwrap.dedent(f"""
     <div class="main-header">
         <svg width="140" height="140" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" style="z-index: 0; margin-left: -20px;">
@@ -450,7 +450,8 @@ elif mode == "📂 批量图片检测":
             preview_placeholder = st.empty() 
             total_fish_count = 0
             
-            image_results_bytes = 
+            # 修复了这里的语法错误，加回了 []
+            image_results_bytes = []
             
             for i, file in enumerate(uploaded_files):
                 img = Image.open(file)
