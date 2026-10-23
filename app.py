@@ -7,6 +7,7 @@ import os
 import io
 import gc
 import zipfile
+import base64
 import numpy as np
 import pandas as pd
 import supervision as sv
@@ -20,7 +21,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# 2. 高级自定义 CSS 美化（纯净水波纹版）
+# 2. 高级自定义 CSS 美化
 st.markdown("""
 <style>
     .stApp { font-family: 'Segoe UI', sans-serif; }
@@ -28,70 +29,151 @@ st.markdown("""
     .main-header {
         position: relative;
         display: flex;
-        justify-content: center;
+        justify-content: space-between;
         align-items: center;            
         background: linear-gradient(135deg, #005c97 0%, #363795 100%);
-        padding: 30px 40px; 
+        padding: 25px 40px; 
         border-radius: 15px; 
         color: white !important; 
         box-shadow: 0 10px 20px rgba(0,0,0,0.1); 
         margin-bottom: 30px;
         overflow: hidden;
+        min-height: 120px;
+    }
+    
+    .header-text { text-align: center; flex-grow: 1; z-index: 1; position: relative; }
+    .main-header h1 { color: white !important; font-size: 2.5rem; margin-bottom: 10px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
+    .main-header p { color: white !important; font-size: 1.1rem; opacity: 0.9; margin: 0; }
+    
+    @media (max-width: 768px) {
+        .main-header { flex-direction: column; padding: 20px; }
+        .main-header h1 { font-size: 1.8rem; }
     }
     
     .wave-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
     .wave { position: absolute; width: 200%; height: 200%; top: -50%; left: -50%; background: rgba(255, 255, 255, 0.08); border-radius: 45%; animation: wave-rotate 12s linear infinite; }
     .wave:nth-child(2) { background: rgba(255, 255, 255, 0.12); animation-duration: 18s; animation-direction: reverse; border-radius: 40%; }
     .wave:nth-child(3) { background: rgba(255, 255, 255, 0.05); animation-duration: 25s; border-radius: 42%; }
-    
-    @keyframes wave-rotate {
-        from { transform: rotate(0deg); }
-        to { transform: rotate(360deg); }
-    }
-    
-    .header-text { text-align: center; z-index: 1; position: relative; }
-    .main-header h1 { color: white !important; font-size: 2.5rem; margin-bottom: 10px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
-    .main-header p { color: white !important; font-size: 1.1rem; opacity: 0.9; margin: 0; }
-    
-    @media (max-width: 768px) {
-        .main-header { padding: 20px; }
-        .main-header h1 { font-size: 1.8rem; }
-    }
-    
+    @keyframes wave-rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
     [data-testid="stFileUploadDropzone"] { border: 2px dashed #005c97 !important; border-radius: 15px; transition: all 0.3s ease; }
     [data-testid="stFileUploadDropzone"]:hover { background-color: rgba(0, 92, 151, 0.1) !important; border-color: #363795 !important; }
     .element-container img { border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
 </style>
 """, unsafe_allow_html=True)
 
-# =========================================================================
-# 3. 渲染顶部 Banner（纯净格式，防止被识别为代码块）
-# =========================================================================
-st.markdown("""
-<div class="main-header">
-<div class="wave-bg">
-<div class="wave"></div>
-<div class="wave"></div>
-<div class="wave"></div>
-</div>
+# 3. 侧边栏 —— 顶部外观设置区
+with st.sidebar:
+    st.markdown("### 🎨 外观个性化")
+    banner_style = st.selectbox(
+        "选择顶部 Banner 样式：",
+        [
+            "🌊 动感水波纹理",
+            "📊 极客状态监控",
+            "🎯 科技矢量图标",
+            "⏱️ 动态信息看板",
+            "🏫 自定义校徽 (需上传)"
+        ]
+    )
+    
+    left_logo_b64 = ""
+    right_logo_b64 = ""
+    if banner_style == "🏫 自定义校徽 (需上传)":
+        st.caption("请上传透明背景的 PNG 图片效果最佳")
+        left_file = st.file_uploader("上传左侧校徽", type=["png", "jpg", "jpeg"], key="left_logo")
+        right_file = st.file_uploader("上传右侧校徽", type=["png", "jpg", "jpeg"], key="right_logo")
+        
+        if left_file:
+            left_logo_b64 = base64.b64encode(left_file.getvalue()).decode()
+        if right_file:
+            right_logo_b64 = base64.b64encode(right_file.getvalue()).decode()
+    
+    st.divider()
+
+# 4. 渲染顶部 Banner
+header_title = """
 <div class="header-text">
-<h1>🐟 水产鱼类智能分析计数工作站</h1>
-<p>单图检测 · 批量图片统计 · 视频微小目标追踪</p>
+    <h1>🐟 水产鱼类智能分析计数工作站</h1>
+    <p>单图检测 · 批量图片统计 · 视频微小目标追踪</p>
 </div>
-</div>
-""", unsafe_allow_html=True)
+"""
 
-# 4. 模型加载
-@st.cache_resource(show_spinner="正在加载 YOLOv11 模型引擎，请稍候...")
-def load_model():
-    return YOLO("best.pt")
+if banner_style == "🌊 动感水波纹理":
+    st.markdown(f"""
+    <div class="main-header">
+        <div class="wave-bg"><div class="wave"></div><div class="wave"></div><div class="wave"></div></div>
+        {header_title}
+    </div>
+    """, unsafe_allow_html=True)
 
-model = load_model()
+elif banner_style == "📊 极客状态监控":
+    st.markdown(f"""
+    <div class="main-header">
+        <div style="text-align: left; font-size: 0.9rem; color: #a3c1e0; z-index: 1;">
+            <div style="margin-bottom: 5px;"><span style="color: #00ff00; font-size: 1.2rem;">●</span> YOLOv11 Engine</div>
+            <div style="font-size: 0.75rem; opacity: 0.8;">Status: Online</div>
+        </div>
+        {header_title}
+        <div style="text-align: right; font-size: 0.9rem; color: #a3c1e0; z-index: 1;">
+            <div style="margin-bottom: 5px;"><span style="color: #ffcc00; font-size: 1.2rem;">●</span> Tracking</div>
+            <div style="font-size: 0.75rem; opacity: 0.8;">Target: Fish</div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
 
-# 5. 侧边栏设计
+elif banner_style == "🎯 科技矢量图标":
+    st.markdown(f"""
+    <div class="main-header">
+        <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="z-index: 1;">
+            <circle cx="12" cy="12" r="10"></circle><line x1="12" y1="2" x2="12" y2="6"></line><line x1="12" y1="18" x2="12" y2="22"></line>
+            <line x1="2" y1="12" x2="6" y2="12"></line><line x1="18" y1="12" x2="22" y2="12"></line>
+            <circle cx="12" cy="12" r="3" fill="rgba(255,255,255,0.3)"></circle>
+        </svg>
+        {header_title}
+        <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="z-index: 1;">
+            <path d="M22 12s-3-5-10-5-9 5-9 5 3 5 9 5 10-5 10-5z"></path><path d="M2 12c2.5 0 4 2 5 3"></path><path d="M2 12c2.5 0 4-2 5-3"></path>
+            <circle cx="15" cy="12" r="1.5" fill="rgba(255,255,255,0.5)"></circle>
+        </svg>
+    </div>
+    """, unsafe_allow_html=True)
+
+elif banner_style == "⏱️ 动态信息看板":
+    st.markdown(f"""
+    <div class="main-header">
+        <div style="width: 120px; font-family: monospace; font-size: 1.2rem; color: #a3c1e0; z-index: 1;">
+            <div id="clock" style="letter-spacing: 2px;">--:--:--</div>
+            <div style="font-size: 0.75rem; margin-top: 5px; opacity: 0.6;">SYSTEM</div>
+        </div>
+        {header_title}
+        <div style="width: 120px; text-align: right; font-family: monospace; font-size: 1.2rem; color: #a3c1e0; z-index: 1;">
+            <div>v1.0.0</div>
+            <div style="font-size: 0.75rem; margin-top: 5px; opacity: 0.6;">YOLOv11</div>
+        </div>
+    </div>
+    <script>
+        function updateClock() {{
+            const now = new Date();
+            document.getElementById('clock').innerText = now.toLocaleTimeString('en-US', {{ hour12: false }});
+        }}
+        setInterval(updateClock, 1000); updateClock();
+    </script>
+    """, unsafe_allow_html=True)
+
+elif banner_style == "🏫 自定义校徽 (需上传)":
+    left_src = f"data:image/png;base64,{left_logo_b64}" if left_logo_b64 else "https://cdn-icons-png.flaticon.com/512/2983/2983804.png"
+    right_src = f"data:image/png;base64,{right_logo_b64}" if right_logo_b64 else "https://cdn-icons-png.flaticon.com/512/2983/2983804.png"
+    
+    st.markdown(f"""
+    <div class="main-header">
+        <img src="{left_src}" style="height: 80px; max-width: 120px; object-fit: contain; margin: 0 20px; z-index: 1;">
+        {header_title}
+        <img src="{right_src}" style="height: 80px; max-width: 120px; object-fit: contain; margin: 0 20px; z-index: 1;">
+    </div>
+    """, unsafe_allow_html=True)
+
+# 5. 侧边栏 —— 控制面板与参数
 with st.sidebar:
     st.markdown("### 🎛️ 控制面板")
-    st.divider()
     
     mode = st.radio(
         "请选择分析模式：",
