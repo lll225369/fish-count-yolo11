@@ -15,7 +15,7 @@ from trackers import ByteTrackTracker
 
 # 1. 页面基础配置
 st.set_page_config(
-    page_title="鱼类智能识别与追踪系统",
+    page_title="金鱼智能识别与追踪系统",
     page_icon="🐟",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -116,7 +116,7 @@ with st.sidebar:
             "📊 极客状态监控",
             "🎯 科技矢量图标",
             "⏱️ 动态信息看板",
-            "🏫 自定义校徽 (需上传)"
+            "🏫 左右自定义图片 (需上传)"
         ],
         index=2
     )
@@ -136,7 +136,7 @@ with st.sidebar:
     st.divider()
 
 # 4. 渲染顶部 Banner 
-header_title = '<div class="header-text"><h1>🐟 水产鱼类智能分析计数工作站</h1><p><span>单图检测</span><span class="divider">|</span><span>批量图片统计</span><span class="divider">|</span><span>视频微小目标追踪</span></p></div>'
+header_title = '<div class="header-text"><h1>🐟 金鱼智能分析计数工作站</h1><p><span>单图检测</span><span class="divider">|</span><span>批量图片统计</span><span class="divider">|</span><span>视频微小目标追踪</span></p></div>'
 
 if banner_style == "🌊 动感水波纹理":
     html_code = f'<div class="main-header"><div class="wave-bg"><div class="wave"></div><div class="wave"></div></div>{header_title}</div>'
@@ -191,7 +191,7 @@ elif banner_style == "⏱️ 动态信息看板":
 </div></div>'''
     st.markdown(html_code, unsafe_allow_html=True)
 
-elif banner_style == "🏫 自定义校徽 (需上传)":
+elif banner_style == "🏫 左右自定义图片 (需上传)":
     left_src = f"data:image/png;base64,{left_logo_b64}" if left_logo_b64 else "https://cdn-icons-png.flaticon.com/512/2983/2983804.png"
     right_src = f"data:image/png;base64,{right_logo_b64}" if right_logo_b64 else "https://cdn-icons-png.flaticon.com/512/2983/2983804.png"
     
