@@ -474,24 +474,33 @@ elif mode == "📂 批量图片检测":
                 del img, res, plot_img
                 gc.collect()
             
-            # 将结果保存到 session_state，防止因为点击下载而导致数据丢失
-            st.session_state["batch_results"] = image_results_bytes
-            st.session_state["batch_df"] = pd.DataFrame(results_data)
-            st.session_state["batch_total_count"] = total_fish_count
-            st.session_state["batch_total_files"] = len(uploaded_files)
+            # 【修复】打包所有相关的数据存入一个单独的 key，防止部分 key 丢失导致 KeyError
+            st.session_state["batch_data"] = {
+                "image_results_bytes": image_results_bytes,
+                "df": pd.DataFrame(results_data),
+                "total_fish_count": total_fish_count,
+                "total_files": len(uploaded_files)
+            }
             st.session_state["current_preview_index"] = 0
             
             # 强制刷新以清除进度条和预览图的残留
             st.rerun()
         
-        # 无论是否刚点击了按钮，只要 session_state 有数据就展示结果（完美解决按钮消失问题）
-        if "batch_results" in st.session_state and st.session_state["batch_results"]:
-            df = st.session_state["batch_df"]
-            total_fish_count = st.session_state["batch_total_count"]
-            total_files = st.session_state["batch_total_files"]
-            image_results_bytes = st.session_state["batch_results"]
+        # 【修复】无论是否刚点击了按钮，只要 session_state 有数据就展示结果
+        if "batch_data" in st.session_state and st.session_state["batch_data"]:
+            # 安全读取打包的数据
+            data = st.session_state["batch_data"]
+            df = data["df"]
+            total_fish_count = data["total_fish_count"]
+            total_files = data["total_files"]
+            image_results_bytes = data["image_results_bytes"]
             
             st.success("✅ 批量检测全部完成！")
+            
+            # 提供一个清空结果的按钮，方便重新测试
+            if st.button("🗑️ 清空当前结果", type="secondary"):
+                del st.session_state["batch_data"]
+                st.rerun()
             
             if total_fish_count == 0:
                 st.error("⚠️ 所有图片均未检测到目标！请立刻检查你是否使用了训练好的鱼类模型（如 best.pt）！")
