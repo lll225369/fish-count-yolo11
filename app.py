@@ -84,20 +84,22 @@ st.markdown("""
 # 3. 渲染顶部 Banner（带左右校徽）
 # ⚠️ 请把你的 Base64 代码粘贴到下面两个三引号之间！
 # =========================================================================
-logo_left_url = """data:image/png;base64,在这里粘贴左校徽的Base64代码"""
-logo_right_url = """data:image/png;base64,在这里粘贴右校徽的Base64代码"""
-
 st.markdown(f"""
 <div class="main-header">
-    <img src="{logo_left_url}" class="logo" alt="左校徽">
+    <div style="text-align: left; font-size: 0.9rem; color: #a3c1e0;">
+        <span style="color: #00ff00;">●</span> YOLOv11 Engine<br>
+        <span style="font-size: 0.75rem;">Status: Online</span>
+    </div>
     <div class="header-text">
         <h1>🐟 水产鱼类智能分析计数工作站</h1>
         <p>单图检测 · 批量图片统计 · 视频微小目标追踪</p>
     </div>
-    <img src="{logo_right_url}" class="logo" alt="右校徽">
+    <div style="text-align: right; font-size: 0.9rem; color: #a3c1e0;">
+        <span style="color: #ffcc00;">●</span> GPU/CPU Mode<br>
+        <span style="font-size: 0.75rem;">Target: Fish</span>
+    </div>
 </div>
 """, unsafe_allow_html=True)
-
 # 4. 模型加载
 @st.cache_resource(show_spinner="正在加载 YOLOv11 模型引擎，请稍候...")
 def load_model():
