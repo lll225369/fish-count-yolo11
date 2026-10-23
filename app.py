@@ -206,7 +206,7 @@ elif banner_style == "🏫 自定义校徽 (需上传)":
 @st.cache_resource
 def load_yolo_model():
     # 【!!! 注意 !!!】如果你有自己的模型，请修改下面的 'yolo11n.pt' 为你的文件名
-    return YOLO('yolo11n.pt') 
+    return YOLO('best.pt') 
 
 model = load_yolo_model()
 
