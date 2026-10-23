@@ -14,102 +14,73 @@ from trackers import ByteTrackTracker
 
 # 1. 页面基础配置
 st.set_page_config(
-    page_title="金鱼智能识别与追踪系统",
+    page_title="鱼类智能识别与追踪系统",
     page_icon="🐟",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# 2. 高级自定义 CSS 美化（完美兼容日夜模式）
+# 2. 高级自定义 CSS 美化（纯净水波纹版）
 st.markdown("""
 <style>
     .stApp { font-family: 'Segoe UI', sans-serif; }
 
     .main-header {
+        position: relative;
         display: flex;
-        justify-content: space-between; 
+        justify-content: center;
         align-items: center;            
         background: linear-gradient(135deg, #005c97 0%, #363795 100%);
-        padding: 20px 40px; 
+        padding: 30px 40px; 
         border-radius: 15px; 
         color: white !important; 
         box-shadow: 0 10px 20px rgba(0,0,0,0.1); 
         margin-bottom: 30px;
+        overflow: hidden;
     }
     
-    .main-header h1 { 
-        color: white !important; 
-        font-size: 2.5rem; 
-        margin-bottom: 10px; 
-        text-shadow: 2px 2px 4px rgba(0,0,0,0.3); 
+    .wave-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
+    .wave { position: absolute; width: 200%; height: 200%; top: -50%; left: -50%; background: rgba(255, 255, 255, 0.08); border-radius: 45%; animation: wave-rotate 12s linear infinite; }
+    .wave:nth-child(2) { background: rgba(255, 255, 255, 0.12); animation-duration: 18s; animation-direction: reverse; border-radius: 40%; }
+    .wave:nth-child(3) { background: rgba(255, 255, 255, 0.05); animation-duration: 25s; border-radius: 42%; }
+    
+    @keyframes wave-rotate {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
     }
     
-    .main-header p { 
-        color: white !important; 
-        font-size: 1.1rem; 
-        opacity: 0.9; 
-        margin: 0; 
-    }
-    
-    .header-text { text-align: center; flex-grow: 1; }
-    
-    .logo {
-        height: 90px;         
-        max-width: 120px;     
-        object-fit: contain;  
-        margin: 0 20px;       
-    }
+    .header-text { text-align: center; z-index: 1; position: relative; }
+    .main-header h1 { color: white !important; font-size: 2.5rem; margin-bottom: 10px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
+    .main-header p { color: white !important; font-size: 1.1rem; opacity: 0.9; margin: 0; }
     
     @media (max-width: 768px) {
-        .main-header { flex-direction: column; padding: 20px; }
-        .logo { height: 60px; margin: 10px 0; }
+        .main-header { padding: 20px; }
         .main-header h1 { font-size: 1.8rem; }
     }
     
-    [data-testid="stFileUploadDropzone"] { 
-        border: 2px dashed #005c97 !important; 
-        border-radius: 15px; 
-        transition: all 0.3s ease; 
-    }
-    [data-testid="stFileUploadDropzone"]:hover { 
-        background-color: rgba(0, 92, 151, 0.1) !important; 
-        border-color: #363795 !important; 
-    }
-    
+    [data-testid="stFileUploadDropzone"] { border: 2px dashed #005c97 !important; border-radius: 15px; transition: all 0.3s ease; }
+    [data-testid="stFileUploadDropzone"]:hover { background-color: rgba(0, 92, 151, 0.1) !important; border-color: #363795 !important; }
     .element-container img { border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
 </style>
 """, unsafe_allow_html=True)
 
 # =========================================================================
-# 3. 渲染顶部 Banner（带左右校徽）
-# ⚠️ 请把你的 Base64 代码粘贴到下面两个三引号之间！
+# 3. 渲染顶部 Banner（纯净格式，防止被识别为代码块）
 # =========================================================================
-st.markdown(f"""
+st.markdown("""
 <div class="main-header">
-    <!-- 左侧：内嵌目标检测准星 SVG -->
-    <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin: 0 20px;">
-        <circle cx="12" cy="12" r="10"></circle>
-        <line x1="12" y1="2" x2="12" y2="6"></line>
-        <line x1="12" y1="18" x2="12" y2="22"></line>
-        <line x1="2" y1="12" x2="6" y2="12"></line>
-        <line x1="18" y1="12" x2="22" y2="12"></line>
-        <circle cx="12" cy="12" r="3" fill="rgba(255,255,255,0.3)"></circle>
-    </svg>
-
-    <div class="header-text">
-        <h1>🐟 水产鱼类智能分析计数工作站</h1>
-        <p>单图检测 · 批量图片统计 · 视频微小目标追踪</p>
-    </div>
-
-    <!-- 右侧：内嵌鱼/数据 SVG -->
-    <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin: 0 20px;">
-        <path d="M22 12s-3-5-10-5-9 5-9 5 3 5 9 5 10-5 10-5z"></path>
-        <path d="M2 12c2.5 0 4 2 5 3"></path>
-        <path d="M2 12c2.5 0 4-2 5-3"></path>
-        <circle cx="15" cy="12" r="1.5" fill="rgba(255,255,255,0.5)"></circle>
-    </svg>
+<div class="wave-bg">
+<div class="wave"></div>
+<div class="wave"></div>
+<div class="wave"></div>
+</div>
+<div class="header-text">
+<h1>🐟 水产鱼类智能分析计数工作站</h1>
+<p>单图检测 · 批量图片统计 · 视频微小目标追踪</p>
+</div>
 </div>
 """, unsafe_allow_html=True)
+
 # 4. 模型加载
 @st.cache_resource(show_spinner="正在加载 YOLOv11 模型引擎，请稍候...")
 def load_model():
@@ -290,7 +261,6 @@ if mode == "📷 单张图像检测":
     if up_img:
         img = Image.open(up_img)
         
-        # 如果更换了图片，清除之前的预测缓存
         if "current_img_name" not in st.session_state or st.session_state.current_img_name != up_img.name:
             st.session_state.current_img_name = up_img.name
             st.session_state.single_pred_img = None
@@ -305,10 +275,8 @@ if mode == "📷 单张图像检测":
                 results = model(img, conf=conf_threshold)
                 res = results[0] if isinstance(results, list) else results
                 
-                # 终极防错：通过 supervision 标准对象获取准确数量
                 detections = sv.Detections.from_ultralytics(res)
                 count = len(detections)
-                
                 plot_img = Image.fromarray(cv2.cvtColor(res.plot(), cv2.COLOR_BGR2RGB))
                 
                 st.session_state.single_pred_img = plot_img
@@ -320,7 +288,6 @@ if mode == "📷 单张图像检测":
             with col2:
                 st.image(st.session_state.single_pred_img, caption="检测结果", use_container_width=True)
                 
-            # 【单图下载】
             img_buffer = io.BytesIO()
             st.session_state.single_pred_img.save(img_buffer, format="JPEG")
             st.download_button(
@@ -356,7 +323,6 @@ elif mode == "📂 批量图片检测":
                 results = model(img, conf=conf_threshold)
                 res = results[0] if isinstance(results, list) else results
                 
-                # 终极防错：通过 supervision 标准对象获取准确数量
                 detections = sv.Detections.from_ultralytics(res)
                 count = len(detections)
                 total_fish_count += count
@@ -388,7 +354,6 @@ elif mode == "📂 批量图片检测":
             st.success("✅ 批量检测全部完成！")
             st.metric(label="📊 本批次累计识别总鱼数", value=f"{total_fish_count} 条", delta=f"共分析 {len(uploaded_files)} 张图片")
             
-            # 【表格输出】
             df = pd.DataFrame(results_data)
             st.markdown("#### 📑 批量统计报表")
             st.dataframe(df, use_container_width=True)
@@ -397,7 +362,6 @@ elif mode == "📂 批量图片检测":
             st.markdown("#### 📥 结果导出")
             col_excel, col_zip = st.columns(2)
             
-            # 【Excel 下载】
             with col_excel:
                 excel_buffer = io.BytesIO()
                 with pd.ExcelWriter(excel_buffer, engine='xlsxwriter') as writer:
@@ -410,7 +374,6 @@ elif mode == "📂 批量图片检测":
                     use_container_width=True
                 )
             
-            # 【ZIP 打包下载】
             with col_zip:
                 zip_buffer = io.BytesIO()
                 with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
@@ -467,14 +430,12 @@ elif mode == "📂 批量图片检测":
                 
         current_item = results[st.session_state["current_preview_index"]]
         
-        # 显示图片
         st.image(
             current_item["bytes"], 
             caption=f"当前查看: {current_item['filename']}",
             use_container_width=True
         )
         
-        # 【单张图片单独下载】
         st.download_button(
             label=f"📥 下载当前单张结果图 ({current_item['filename']})",
             data=current_item["bytes"],
