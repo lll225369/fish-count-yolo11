@@ -20,7 +20,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# 2. 高级自定义 CSS 美化（兼容日夜模式）
+# 2. 高级自定义 CSS 美化（完美兼容日夜模式）
 st.markdown("""
 <style>
     .stApp { font-family: 'Segoe UI', sans-serif; }
@@ -248,7 +248,7 @@ with st.sidebar:
                 st.button("🔄", key="reset_o_btn", on_click=reset_o, help="恢复默认值 (0.20)")
             overlap = st.session_state.overlap_val
 
-# --- 提取通用预测逻辑（兼容性增强版） ---
+# --- 提取通用预测逻辑 ---
 def predict_frame(frame_rgb, use_sahi=False):
     if use_sahi:
         overlap_w = int(slice_width * overlap)
@@ -278,6 +278,7 @@ if mode == "📷 单张图像检测":
     if up_img:
         img = Image.open(up_img)
         
+        # 如果更换了图片，清除之前的预测缓存
         if "current_img_name" not in st.session_state or st.session_state.current_img_name != up_img.name:
             st.session_state.current_img_name = up_img.name
             st.session_state.single_pred_img = None
@@ -292,8 +293,10 @@ if mode == "📷 单张图像检测":
                 results = model(img, conf=conf_threshold)
                 res = results[0] if isinstance(results, list) else results
                 
-                # 直接通过 tensor 的 shape 获取准确数量
-                count = res.boxes.data.shape[0] if res.boxes is not None else 0
+                # 终极防错：通过 supervision 标准对象获取准确数量
+                detections = sv.Detections.from_ultralytics(res)
+                count = len(detections)
+                
                 plot_img = Image.fromarray(cv2.cvtColor(res.plot(), cv2.COLOR_BGR2RGB))
                 
                 st.session_state.single_pred_img = plot_img
@@ -305,7 +308,7 @@ if mode == "📷 单张图像检测":
             with col2:
                 st.image(st.session_state.single_pred_img, caption="检测结果", use_container_width=True)
                 
-            # 【单图下载功能】
+            # 【单图下载】
             img_buffer = io.BytesIO()
             st.session_state.single_pred_img.save(img_buffer, format="JPEG")
             st.download_button(
@@ -341,8 +344,9 @@ elif mode == "📂 批量图片检测":
                 results = model(img, conf=conf_threshold)
                 res = results[0] if isinstance(results, list) else results
                 
-                # 直接通过 tensor 的 shape 获取准确数量
-                count = res.boxes.data.shape[0] if res.boxes is not None else 0
+                # 终极防错：通过 supervision 标准对象获取准确数量
+                detections = sv.Detections.from_ultralytics(res)
+                count = len(detections)
                 total_fish_count += count
                 
                 results_data.append({
@@ -372,7 +376,7 @@ elif mode == "📂 批量图片检测":
             st.success("✅ 批量检测全部完成！")
             st.metric(label="📊 本批次累计识别总鱼数", value=f"{total_fish_count} 条", delta=f"共分析 {len(uploaded_files)} 张图片")
             
-            # 【表格输出功能】
+            # 【表格输出】
             df = pd.DataFrame(results_data)
             st.markdown("#### 📑 批量统计报表")
             st.dataframe(df, use_container_width=True)
@@ -381,7 +385,7 @@ elif mode == "📂 批量图片检测":
             st.markdown("#### 📥 结果导出")
             col_excel, col_zip = st.columns(2)
             
-            # 【Excel 表格下载】
+            # 【Excel 下载】
             with col_excel:
                 excel_buffer = io.BytesIO()
                 with pd.ExcelWriter(excel_buffer, engine='xlsxwriter') as writer:
@@ -394,7 +398,7 @@ elif mode == "📂 批量图片检测":
                     use_container_width=True
                 )
             
-            # 【ZIP 批量图片下载】
+            # 【ZIP 打包下载】
             with col_zip:
                 zip_buffer = io.BytesIO()
                 with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
