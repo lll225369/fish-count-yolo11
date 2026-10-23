@@ -86,18 +86,12 @@ st.markdown("""
 # =========================================================================
 st.markdown(f"""
 <div class="main-header">
-    <div style="text-align: left; font-size: 0.9rem; color: #a3c1e0;">
-        <span style="color: #00ff00;">●</span> YOLOv11 Engine<br>
-        <span style="font-size: 0.75rem;">Status: Online</span>
-    </div>
+    <div style="font-size: 3rem; opacity: 0.8;">🎯</div>
     <div class="header-text">
         <h1>🐟 水产鱼类智能分析计数工作站</h1>
         <p>单图检测 · 批量图片统计 · 视频微小目标追踪</p>
     </div>
-    <div style="text-align: right; font-size: 0.9rem; color: #a3c1e0;">
-        <span style="color: #ffcc00;">●</span> GPU/CPU Mode<br>
-        <span style="font-size: 0.75rem;">Target: Fish</span>
-    </div>
+    <div style="font-size: 3rem; opacity: 0.8;">🌊</div>
 </div>
 """, unsafe_allow_html=True)
 # 4. 模型加载
