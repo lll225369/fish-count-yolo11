@@ -86,24 +86,28 @@ st.markdown("""
 # =========================================================================
 st.markdown(f"""
 <div class="main-header">
-    <!-- 左侧科技装饰 -->
-    <div style="display: flex; flex-direction: column; gap: 5px; width: 100px;">
-        <div style="height: 4px; width: 40px; background: #00d2ff; border-radius: 2px;"></div>
-        <div style="height: 4px; width: 70px; background: #00d2ff; opacity: 0.6; border-radius: 2px;"></div>
-        <div style="height: 4px; width: 50px; background: #00d2ff; opacity: 0.3; border-radius: 2px;"></div>
-    </div>
+    <!-- 左侧：内嵌目标检测准星 SVG -->
+    <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin: 0 20px;">
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="12" y1="2" x2="12" y2="6"></line>
+        <line x1="12" y1="18" x2="12" y2="22"></line>
+        <line x1="2" y1="12" x2="6" y2="12"></line>
+        <line x1="18" y1="12" x2="22" y2="12"></line>
+        <circle cx="12" cy="12" r="3" fill="rgba(255,255,255,0.3)"></circle>
+    </svg>
 
     <div class="header-text">
         <h1>🐟 水产鱼类智能分析计数工作站</h1>
         <p>单图检测 · 批量图片统计 · 视频微小目标追踪</p>
     </div>
 
-    <!-- 右侧科技装饰 -->
-    <div style="display: flex; flex-direction: column; gap: 5px; width: 100px; align-items: flex-end;">
-        <div style="height: 4px; width: 50px; background: #00d2ff; opacity: 0.3; border-radius: 2px;"></div>
-        <div style="height: 4px; width: 70px; background: #00d2ff; opacity: 0.6; border-radius: 2px;"></div>
-        <div style="height: 4px; width: 40px; background: #00d2ff; border-radius: 2px;"></div>
-    </div>
+    <!-- 右侧：内嵌鱼/数据 SVG -->
+    <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin: 0 20px;">
+        <path d="M22 12s-3-5-10-5-9 5-9 5 3 5 9 5 10-5 10-5z"></path>
+        <path d="M2 12c2.5 0 4 2 5 3"></path>
+        <path d="M2 12c2.5 0 4-2 5-3"></path>
+        <circle cx="15" cy="12" r="1.5" fill="rgba(255,255,255,0.5)"></circle>
+    </svg>
 </div>
 """, unsafe_allow_html=True)
 # 4. 模型加载
