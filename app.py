@@ -57,15 +57,17 @@ st.markdown("""
     }
     
     .header-text { text-align: center; flex-grow: 1; z-index: 1; position: relative; }
+    
+    /* 加入 clamp 自适应字号，防止小屏幕下标题被截断 */
     .main-header h1 { 
         color: white !important; 
-        font-size: 2.5rem; 
+        font-size: clamp(1.8rem, 3vw, 2.5rem); 
         margin-bottom: 10px; 
         font-weight: 700;
         letter-spacing: 2px;
-        /* 改用微弱的白色发光替代黑色重影 */
         text-shadow: 0 2px 10px rgba(255, 255, 255, 0.2); 
     }
+    
     .main-header p { 
         color: #a3c1e0 !important; 
         font-size: 1.05rem; 
@@ -76,16 +78,23 @@ st.markdown("""
         align-items: center;
         gap: 15px;
     }
+    
     /* 副标题中间的竖线分隔符 */
     .main-header p span.divider { opacity: 0.4; font-size: 0.8rem; }
     
     @media (max-width: 768px) {
         .main-header { flex-direction: column; padding: 20px; }
-        .main-header h1 { font-size: 1.8rem; }
         .main-header p { flex-direction: column; gap: 5px; }
         .main-header p span.divider { display: none; }
     }
     
+    /* 动态信息看板的呼吸灯动画 */
+    @keyframes pulse-green {
+        0% { box-shadow: 0 0 0 0 rgba(0, 255, 0, 0.7); }
+        70% { box-shadow: 0 0 0 10px rgba(0, 255, 0, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(0, 255, 0, 0); }
+    }
+
     .wave-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
     .wave { position: absolute; width: 200%; height: 200%; top: -50%; left: -50%; background: rgba(255, 255, 255, 0.05); border-radius: 45%; animation: wave-rotate 12s linear infinite; }
     .wave:nth-child(2) { background: rgba(255, 255, 255, 0.08); animation-duration: 18s; animation-direction: reverse; border-radius: 40%; }
@@ -187,26 +196,23 @@ elif banner_style == "🎯 科技矢量图标":
     st.markdown(html_code, unsafe_allow_html=True)
 
 elif banner_style == "⏱️ 动态信息看板":
-    # 修复左侧占位感，右侧增加胶囊标签框
+    # 使用纯 CSS 呼吸灯替代失效的 JS 时钟
     html_code = textwrap.dedent(f"""
     <div class="main-header">
-        <div style="width: 150px; font-family: 'Courier New', monospace; font-size: 1.2rem; color: #a3c1e0; z-index: 1; text-align: left;">
-            <div id="clock" style="letter-spacing: 2px; color: #00e5ff; text-shadow: 0 0 10px rgba(0,229,255,0.5);">--:--:--</div>
-            <div style="font-size: 0.7rem; margin-top: 8px; padding: 2px 6px; background: rgba(255,255,255,0.1); border-radius: 4px; display: inline-block; border: 1px solid rgba(255,255,255,0.1);">SYS.MONITOR</div>
+        <div style="width: 150px; font-family: 'Courier New', monospace; z-index: 1; text-align: left;">
+            <!-- 呼吸灯在线状态 -->
+            <div style="font-size: 0.95rem; color: #00e5ff; text-shadow: 0 0 10px rgba(0,229,255,0.4); display: flex; align-items: center; gap: 8px; font-weight: bold; letter-spacing: 1px;">
+                <div style="width: 10px; height: 10px; background-color: #00ff00; border-radius: 50%; box-shadow: 0 0 10px #00ff00; animation: pulse-green 2s infinite;"></div>
+                ONLINE
+            </div>
+            <div style="font-size: 0.7rem; margin-top: 10px; padding: 3px 8px; background: rgba(255,255,255,0.08); border-radius: 4px; display: inline-block; border: 1px solid rgba(255,255,255,0.1); color: #a3c1e0; letter-spacing: 1px;">SYS.MONITOR</div>
         </div>
         {header_title}
         <div style="width: 150px; text-align: right; font-family: 'Courier New', monospace; z-index: 1;">
-            <div style="display: inline-block; padding: 4px 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15); border-radius: 20px; font-size: 0.9rem; color: #e0e0e0; margin-bottom: 6px;">v1.0.0</div>
+            <div style="display: inline-block; padding: 4px 12px; background: rgba(0, 229, 255, 0.1); border: 1px solid rgba(0, 229, 255, 0.3); border-radius: 20px; font-size: 0.85rem; color: #00e5ff; margin-bottom: 6px; font-weight: bold;">v1.0.0</div>
             <div style="font-size: 0.75rem; opacity: 0.6; letter-spacing: 1px; color: #a3c1e0;">YOLOv11 Engine</div>
         </div>
     </div>
-    <script>
-        function updateClock() {{
-            const now = new Date();
-            document.getElementById('clock').innerText = now.toLocaleTimeString('en-US', {{ hour12: false }});
-        }}
-        setInterval(updateClock, 1000); updateClock();
-    </script>
     """).strip()
     st.markdown(html_code, unsafe_allow_html=True)
 
