@@ -8,7 +8,6 @@ import io
 import gc
 import zipfile
 import base64
-import textwrap
 import numpy as np
 import pandas as pd
 import supervision as sv
@@ -27,9 +26,12 @@ st.markdown("""
 <style>
     .stApp { font-family: 'Segoe UI', sans-serif; }
 
-    /* 深度覆盖侧边栏下拉框和输入框的聚焦颜色，彻底干掉红框 */
+    /* 暴力覆盖侧边栏下拉框的红框，包括悬停和聚焦状态 */
     div[data-baseweb="select"] > div {
-        border-color: rgba(255, 255, 255, 0.15) !important;
+        border-color: rgba(255, 255, 255, 0.2) !important;
+    }
+    div[data-baseweb="select"]:hover > div {
+        border-color: rgba(0, 229, 255, 0.5) !important;
     }
     div[data-baseweb="select"] > div:focus-within {
         border-color: #00e5ff !important;
@@ -116,7 +118,7 @@ with st.sidebar:
             "⏱️ 动态信息看板",
             "🏫 自定义校徽 (需上传)"
         ],
-        index=2 # 默认选中科技矢量图标
+        index=2
     )
     
     left_logo_b64 = ""
@@ -134,109 +136,72 @@ with st.sidebar:
     st.divider()
 
 # 4. 渲染顶部 Banner 
-header_title = textwrap.dedent("""
-<div class="header-text">
-    <h1>🐟 水产鱼类智能分析计数工作站</h1>
-    <p>
-        <span>单图检测</span><span class="divider">|</span>
-        <span>批量图片统计</span><span class="divider">|</span>
-        <span>视频微小目标追踪</span>
-    </p>
-</div>
-""").strip()
+# 【关键修复】将 HTML 强制压缩为单行，杜绝被 Markdown 渲染为代码块的可能
+header_title = '<div class="header-text"><h1>🐟 水产鱼类智能分析计数工作站</h1><p><span>单图检测</span><span class="divider">|</span><span>批量图片统计</span><span class="divider">|</span><span>视频微小目标追踪</span></p></div>'
 
 if banner_style == "🌊 动感水波纹理":
-    html_code = textwrap.dedent(f"""
-    <div class="main-header">
-        <div class="wave-bg">
-            <div class="wave"></div>
-            <div class="wave"></div>
-        </div>
-        {header_title}
-    </div>
-    """).strip()
+    html_code = f'<div class="main-header"><div class="wave-bg"><div class="wave"></div><div class="wave"></div></div>{header_title}</div>'
     st.markdown(html_code, unsafe_allow_html=True)
 
 elif banner_style == "📊 极客状态监控":
-    html_code = textwrap.dedent(f"""
-    <div class="main-header" style="justify-content: space-between;">
-        <div style="text-align: left; font-family: monospace; font-size: 0.9rem; color: #8bbced; z-index: 1; min-width: 140px;">
-            <div style="margin-bottom: 5px;"><span style="color: #00ff00; font-size: 1rem; text-shadow: 0 0 8px #00ff00;">●</span> YOLO ENGINE</div>
-            <div style="font-size: 0.75rem; opacity: 0.8; padding-left: 18px;">STATUS: ONLINE</div>
-        </div>
-        {header_title}
-        <div style="text-align: right; font-family: monospace; font-size: 0.9rem; color: #8bbced; z-index: 1; min-width: 140px;">
-            <div style="margin-bottom: 5px;">TRACKING <span style="color: #ffcc00; font-size: 1rem; text-shadow: 0 0 8px #ffcc00;">●</span></div>
-            <div style="font-size: 0.75rem; opacity: 0.8; padding-right: 18px;">TARGET: FISH</div>
-        </div>
-    </div>
-    """).strip()
+    html_code = f'''<div class="main-header" style="justify-content: space-between;">
+<div style="text-align: left; font-family: monospace; font-size: 0.9rem; color: #8bbced; z-index: 1; min-width: 140px;">
+<div style="margin-bottom: 5px;"><span style="color: #00ff00; font-size: 1rem; text-shadow: 0 0 8px #00ff00;">●</span> YOLO ENGINE</div>
+<div style="font-size: 0.75rem; opacity: 0.8; padding-left: 18px;">STATUS: ONLINE</div>
+</div>{header_title}
+<div style="text-align: right; font-family: monospace; font-size: 0.9rem; color: #8bbced; z-index: 1; min-width: 140px;">
+<div style="margin-bottom: 5px;">TRACKING <span style="color: #ffcc00; font-size: 1rem; text-shadow: 0 0 8px #ffcc00;">●</span></div>
+<div style="font-size: 0.75rem; opacity: 0.8; padding-right: 18px;">TARGET: FISH</div>
+</div></div>'''
     st.markdown(html_code, unsafe_allow_html=True)
 
 elif banner_style == "🎯 科技矢量图标":
-    # 全新设计的对称科技 HUD 图标：左侧雷达网络，右侧声呐探测，带有悬浮动效和青色辉光
-    html_code = textwrap.dedent(f"""
-    <div class="main-header" style="justify-content: space-between;">
-        <!-- 左侧：智能神经网络/雷达图 -->
-        <div style="z-index: 1; animation: float 6s ease-in-out infinite;">
-            <svg width="80" height="80" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="50" cy="50" r="40" stroke="rgba(0, 229, 255, 0.2)" stroke-width="1.5"/>
-                <circle cx="50" cy="50" r="25" stroke="rgba(0, 229, 255, 0.5)" stroke-width="1.5"/>
-                <circle cx="50" cy="50" r="10" fill="rgba(0, 229, 255, 0.15)" stroke="#00e5ff" stroke-width="2"/>
-                <path d="M50 10 L50 20 M50 80 L50 90 M10 50 L20 50 M80 50 L90 50" stroke="#00e5ff" stroke-width="2" stroke-linecap="round"/>
-                <path d="M22 22 L29 29 M78 22 L71 29 M22 78 L29 71 M78 78 L71 71" stroke="rgba(0, 229, 255, 0.5)" stroke-width="1.5" stroke-linecap="round"/>
-                <circle cx="50" cy="50" r="4" fill="#00e5ff" style="filter: drop-shadow(0 0 5px #00e5ff);"/>
-            </svg>
-        </div>
-        
-        {header_title}
-        
-        <!-- 右侧：全息数据矩阵/声呐脉冲 -->
-        <div style="z-index: 1; animation: float 6s ease-in-out infinite; animation-delay: 3s;">
-            <svg width="80" height="80" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M20 50 Q 50 10, 80 50 Q 50 90, 20 50 Z" stroke="rgba(0, 229, 255, 0.4)" stroke-width="1.5"/>
-                <path d="M35 50 Q 50 30, 65 50 Q 50 70, 35 50 Z" stroke="rgba(0, 229, 255, 0.6)" stroke-width="1.5"/>
-                <circle cx="50" cy="50" r="6" fill="#00e5ff" style="filter: drop-shadow(0 0 8px #00e5ff);"/>
-                <line x1="50" y1="5" x2="50" y2="15" stroke="#00e5ff" stroke-width="2" stroke-linecap="round"/>
-                <line x1="50" y1="85" x2="50" y2="95" stroke="#00e5ff" stroke-width="2" stroke-linecap="round"/>
-                <line x1="5" y1="50" x2="15" y2="50" stroke="#00e5ff" stroke-width="2" stroke-linecap="round"/>
-                <line x1="85" y1="50" x2="95" y2="50" stroke="#00e5ff" stroke-width="2" stroke-linecap="round"/>
-            </svg>
-        </div>
-    </div>
-    """).strip()
+    # 去掉了所有前导缩进
+    html_code = f'''<div class="main-header" style="justify-content: space-between;">
+<div style="z-index: 1; animation: float 6s ease-in-out infinite;">
+<svg width="80" height="80" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+<circle cx="50" cy="50" r="40" stroke="rgba(0, 229, 255, 0.2)" stroke-width="1.5"/>
+<circle cx="50" cy="50" r="25" stroke="rgba(0, 229, 255, 0.5)" stroke-width="1.5"/>
+<circle cx="50" cy="50" r="10" fill="rgba(0, 229, 255, 0.15)" stroke="#00e5ff" stroke-width="2"/>
+<path d="M50 10 L50 20 M50 80 L50 90 M10 50 L20 50 M80 50 L90 50" stroke="#00e5ff" stroke-width="2" stroke-linecap="round"/>
+<path d="M22 22 L29 29 M78 22 L71 29 M22 78 L29 71 M78 78 L71 71" stroke="rgba(0, 229, 255, 0.5)" stroke-width="1.5" stroke-linecap="round"/>
+<circle cx="50" cy="50" r="4" fill="#00e5ff" style="filter: drop-shadow(0 0 5px #00e5ff);"/>
+</svg></div>
+{header_title}
+<div style="z-index: 1; animation: float 6s ease-in-out infinite; animation-delay: 3s;">
+<svg width="80" height="80" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M20 50 Q 50 10, 80 50 Q 50 90, 20 50 Z" stroke="rgba(0, 229, 255, 0.4)" stroke-width="1.5"/>
+<path d="M35 50 Q 50 30, 65 50 Q 50 70, 35 50 Z" stroke="rgba(0, 229, 255, 0.6)" stroke-width="1.5"/>
+<circle cx="50" cy="50" r="6" fill="#00e5ff" style="filter: drop-shadow(0 0 8px #00e5ff);"/>
+<line x1="50" y1="5" x2="50" y2="15" stroke="#00e5ff" stroke-width="2" stroke-linecap="round"/>
+<line x1="50" y1="85" x2="50" y2="95" stroke="#00e5ff" stroke-width="2" stroke-linecap="round"/>
+<line x1="5" y1="50" x2="15" y2="50" stroke="#00e5ff" stroke-width="2" stroke-linecap="round"/>
+<line x1="85" y1="50" x2="95" y2="50" stroke="#00e5ff" stroke-width="2" stroke-linecap="round"/>
+</svg></div></div>'''
     st.markdown(html_code, unsafe_allow_html=True)
 
 elif banner_style == "⏱️ 动态信息看板":
-    html_code = textwrap.dedent(f"""
-    <div class="main-header" style="justify-content: space-between;">
-        <div style="width: 160px; font-family: 'Courier New', monospace; z-index: 1; text-align: left;">
-            <div style="font-size: 0.95rem; color: #00e5ff; text-shadow: 0 0 10px rgba(0,229,255,0.6); display: flex; align-items: center; gap: 8px; font-weight: bold; letter-spacing: 1px;">
-                <div style="width: 10px; height: 10px; background-color: #00ff00; border-radius: 50%; box-shadow: 0 0 10px #00ff00; animation: pulse-green 2s infinite;"></div>
-                ONLINE
-            </div>
-            <div style="font-size: 0.7rem; margin-top: 10px; padding: 4px 10px; background: rgba(0, 229, 255, 0.1); border-radius: 6px; display: inline-block; border: 1px solid rgba(0, 229, 255, 0.3); color: #00e5ff; letter-spacing: 1px;">SYS.MONITOR</div>
-        </div>
-        {header_title}
-        <div style="width: 160px; text-align: right; font-family: 'Courier New', monospace; z-index: 1;">
-            <div style="display: inline-block; padding: 6px 14px; background: rgba(0, 229, 255, 0.1); border: 1px solid rgba(0, 229, 255, 0.3); border-radius: 20px; font-size: 0.9rem; color: #00e5ff; margin-bottom: 6px; font-weight: bold;">v1.0.0</div>
-            <div style="font-size: 0.75rem; opacity: 0.7; letter-spacing: 1px; color: #8bbced;">YOLOv11 Engine</div>
-        </div>
-    </div>
-    """).strip()
+    html_code = f'''<div class="main-header" style="justify-content: space-between;">
+<div style="width: 160px; font-family: 'Courier New', monospace; z-index: 1; text-align: left;">
+<div style="font-size: 0.95rem; color: #00e5ff; text-shadow: 0 0 10px rgba(0,229,255,0.6); display: flex; align-items: center; gap: 8px; font-weight: bold; letter-spacing: 1px;">
+<div style="width: 10px; height: 10px; background-color: #00ff00; border-radius: 50%; box-shadow: 0 0 10px #00ff00; animation: pulse-green 2s infinite;"></div>ONLINE</div>
+<div style="font-size: 0.7rem; margin-top: 10px; padding: 4px 10px; background: rgba(0, 229, 255, 0.1); border-radius: 6px; display: inline-block; border: 1px solid rgba(0, 229, 255, 0.3); color: #00e5ff; letter-spacing: 1px;">SYS.MONITOR</div>
+</div>{header_title}
+<div style="width: 160px; text-align: right; font-family: 'Courier New', monospace; z-index: 1;">
+<div style="display: inline-block; padding: 6px 14px; background: rgba(0, 229, 255, 0.1); border: 1px solid rgba(0, 229, 255, 0.3); border-radius: 20px; font-size: 0.9rem; color: #00e5ff; margin-bottom: 6px; font-weight: bold;">v1.0.0</div>
+<div style="font-size: 0.75rem; opacity: 0.7; letter-spacing: 1px; color: #8bbced;">YOLOv11 Engine</div>
+</div></div>'''
     st.markdown(html_code, unsafe_allow_html=True)
 
 elif banner_style == "🏫 自定义校徽 (需上传)":
     left_src = f"data:image/png;base64,{left_logo_b64}" if left_logo_b64 else "https://cdn-icons-png.flaticon.com/512/2983/2983804.png"
     right_src = f"data:image/png;base64,{right_logo_b64}" if right_logo_b64 else "https://cdn-icons-png.flaticon.com/512/2983/2983804.png"
     
-    html_code = textwrap.dedent(f"""
-    <div class="main-header" style="justify-content: space-between;">
-        <img src="{left_src}" style="height: 80px; max-width: 120px; object-fit: contain; margin: 0 20px; z-index: 1; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));">
-        {header_title}
-        <img src="{right_src}" style="height: 80px; max-width: 120px; object-fit: contain; margin: 0 20px; z-index: 1; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));">
-    </div>
-    """).strip()
+    html_code = f'''<div class="main-header" style="justify-content: space-between;">
+<img src="{left_src}" style="height: 80px; max-width: 120px; object-fit: contain; margin: 0 20px; z-index: 1; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));">
+{header_title}
+<img src="{right_src}" style="height: 80px; max-width: 120px; object-fit: contain; margin: 0 20px; z-index: 1; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));">
+</div>'''
     st.markdown(html_code, unsafe_allow_html=True)
 
 # 5. 侧边栏 —— 控制面板与参数
