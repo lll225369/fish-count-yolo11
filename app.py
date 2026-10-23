@@ -8,6 +8,7 @@ import io
 import gc
 import zipfile
 import base64
+import textwrap
 import numpy as np
 import pandas as pd
 import supervision as sv
@@ -90,24 +91,29 @@ with st.sidebar:
     
     st.divider()
 
-# 4. 渲染顶部 Banner
-header_title = """
+# 4. 渲染顶部 Banner (使用 dedent 消除缩进，防止被解析为代码块)
+header_title = textwrap.dedent("""
 <div class="header-text">
     <h1>🐟 水产鱼类智能分析计数工作站</h1>
     <p>单图检测 · 批量图片统计 · 视频微小目标追踪</p>
 </div>
-"""
+""").strip()
 
 if banner_style == "🌊 动感水波纹理":
-    st.markdown(f"""
+    html_code = textwrap.dedent(f"""
     <div class="main-header">
-        <div class="wave-bg"><div class="wave"></div><div class="wave"></div><div class="wave"></div></div>
+        <div class="wave-bg">
+            <div class="wave"></div>
+            <div class="wave"></div>
+            <div class="wave"></div>
+        </div>
         {header_title}
     </div>
-    """, unsafe_allow_html=True)
+    """).strip()
+    st.markdown(html_code, unsafe_allow_html=True)
 
 elif banner_style == "📊 极客状态监控":
-    st.markdown(f"""
+    html_code = textwrap.dedent(f"""
     <div class="main-header">
         <div style="text-align: left; font-size: 0.9rem; color: #a3c1e0; z-index: 1;">
             <div style="margin-bottom: 5px;"><span style="color: #00ff00; font-size: 1.2rem;">●</span> YOLOv11 Engine</div>
@@ -119,10 +125,11 @@ elif banner_style == "📊 极客状态监控":
             <div style="font-size: 0.75rem; opacity: 0.8;">Target: Fish</div>
         </div>
     </div>
-    """, unsafe_allow_html=True)
+    """).strip()
+    st.markdown(html_code, unsafe_allow_html=True)
 
 elif banner_style == "🎯 科技矢量图标":
-    st.markdown(f"""
+    html_code = textwrap.dedent(f"""
     <div class="main-header">
         <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="z-index: 1;">
             <circle cx="12" cy="12" r="10"></circle><line x1="12" y1="2" x2="12" y2="6"></line><line x1="12" y1="18" x2="12" y2="22"></line>
@@ -135,10 +142,11 @@ elif banner_style == "🎯 科技矢量图标":
             <circle cx="15" cy="12" r="1.5" fill="rgba(255,255,255,0.5)"></circle>
         </svg>
     </div>
-    """, unsafe_allow_html=True)
+    """).strip()
+    st.markdown(html_code, unsafe_allow_html=True)
 
 elif banner_style == "⏱️ 动态信息看板":
-    st.markdown(f"""
+    html_code = textwrap.dedent(f"""
     <div class="main-header">
         <div style="width: 120px; font-family: monospace; font-size: 1.2rem; color: #a3c1e0; z-index: 1;">
             <div id="clock" style="letter-spacing: 2px;">--:--:--</div>
@@ -157,19 +165,21 @@ elif banner_style == "⏱️ 动态信息看板":
         }}
         setInterval(updateClock, 1000); updateClock();
     </script>
-    """, unsafe_allow_html=True)
+    """).strip()
+    st.markdown(html_code, unsafe_allow_html=True)
 
 elif banner_style == "🏫 自定义校徽 (需上传)":
     left_src = f"data:image/png;base64,{left_logo_b64}" if left_logo_b64 else "https://cdn-icons-png.flaticon.com/512/2983/2983804.png"
     right_src = f"data:image/png;base64,{right_logo_b64}" if right_logo_b64 else "https://cdn-icons-png.flaticon.com/512/2983/2983804.png"
     
-    st.markdown(f"""
+    html_code = textwrap.dedent(f"""
     <div class="main-header">
         <img src="{left_src}" style="height: 80px; max-width: 120px; object-fit: contain; margin: 0 20px; z-index: 1;">
         {header_title}
         <img src="{right_src}" style="height: 80px; max-width: 120px; object-fit: contain; margin: 0 20px; z-index: 1;">
     </div>
-    """, unsafe_allow_html=True)
+    """).strip()
+    st.markdown(html_code, unsafe_allow_html=True)
 
 # 5. 侧边栏 —— 控制面板与参数
 with st.sidebar:
