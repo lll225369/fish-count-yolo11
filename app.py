@@ -14,7 +14,7 @@ from trackers import ByteTrackTracker
 
 # 1. 页面基础配置
 st.set_page_config(
-    page_title="鱼类智能识别与追踪系统",
+    page_title="金鱼智能识别与追踪系统",
     page_icon="🐟",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -86,12 +86,24 @@ st.markdown("""
 # =========================================================================
 st.markdown(f"""
 <div class="main-header">
-    <div style="font-size: 3rem; opacity: 0.8;">🎯</div>
+    <!-- 左侧科技装饰 -->
+    <div style="display: flex; flex-direction: column; gap: 5px; width: 100px;">
+        <div style="height: 4px; width: 40px; background: #00d2ff; border-radius: 2px;"></div>
+        <div style="height: 4px; width: 70px; background: #00d2ff; opacity: 0.6; border-radius: 2px;"></div>
+        <div style="height: 4px; width: 50px; background: #00d2ff; opacity: 0.3; border-radius: 2px;"></div>
+    </div>
+
     <div class="header-text">
         <h1>🐟 水产鱼类智能分析计数工作站</h1>
         <p>单图检测 · 批量图片统计 · 视频微小目标追踪</p>
     </div>
-    <div style="font-size: 3rem; opacity: 0.8;">🌊</div>
+
+    <!-- 右侧科技装饰 -->
+    <div style="display: flex; flex-direction: column; gap: 5px; width: 100px; align-items: flex-end;">
+        <div style="height: 4px; width: 50px; background: #00d2ff; opacity: 0.3; border-radius: 2px;"></div>
+        <div style="height: 4px; width: 70px; background: #00d2ff; opacity: 0.6; border-radius: 2px;"></div>
+        <div style="height: 4px; width: 40px; background: #00d2ff; border-radius: 2px;"></div>
+    </div>
 </div>
 """, unsafe_allow_html=True)
 # 4. 模型加载
