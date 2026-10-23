@@ -20,7 +20,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# 2. 高级自定义 CSS 美化（兼容日夜模式，仅 Banner 强制白字）
+# 2. 高级自定义 CSS 美化（兼容日夜模式）
 st.markdown("""
 <style>
     .stApp { font-family: 'Segoe UI', sans-serif; }
@@ -292,8 +292,8 @@ if mode == "📷 单张图像检测":
                 results = model(img, conf=conf_threshold)
                 res = results[0] if isinstance(results, list) else results
                 
-                # 【核心修复】直接使用 len(res) 获取目标数量
-                count = len(res)
+                # 直接通过 tensor 的 shape 获取准确数量
+                count = res.boxes.data.shape[0] if res.boxes is not None else 0
                 plot_img = Image.fromarray(cv2.cvtColor(res.plot(), cv2.COLOR_BGR2RGB))
                 
                 st.session_state.single_pred_img = plot_img
@@ -305,6 +305,7 @@ if mode == "📷 单张图像检测":
             with col2:
                 st.image(st.session_state.single_pred_img, caption="检测结果", use_container_width=True)
                 
+            # 【单图下载功能】
             img_buffer = io.BytesIO()
             st.session_state.single_pred_img.save(img_buffer, format="JPEG")
             st.download_button(
@@ -340,8 +341,8 @@ elif mode == "📂 批量图片检测":
                 results = model(img, conf=conf_threshold)
                 res = results[0] if isinstance(results, list) else results
                 
-                # 【核心修复】直接使用 len(res) 获取目标数量
-                count = len(res)
+                # 直接通过 tensor 的 shape 获取准确数量
+                count = res.boxes.data.shape[0] if res.boxes is not None else 0
                 total_fish_count += count
                 
                 results_data.append({
@@ -371,6 +372,7 @@ elif mode == "📂 批量图片检测":
             st.success("✅ 批量检测全部完成！")
             st.metric(label="📊 本批次累计识别总鱼数", value=f"{total_fish_count} 条", delta=f"共分析 {len(uploaded_files)} 张图片")
             
+            # 【表格输出功能】
             df = pd.DataFrame(results_data)
             st.markdown("#### 📑 批量统计报表")
             st.dataframe(df, use_container_width=True)
@@ -379,6 +381,7 @@ elif mode == "📂 批量图片检测":
             st.markdown("#### 📥 结果导出")
             col_excel, col_zip = st.columns(2)
             
+            # 【Excel 表格下载】
             with col_excel:
                 excel_buffer = io.BytesIO()
                 with pd.ExcelWriter(excel_buffer, engine='xlsxwriter') as writer:
@@ -391,6 +394,7 @@ elif mode == "📂 批量图片检测":
                     use_container_width=True
                 )
             
+            # 【ZIP 批量图片下载】
             with col_zip:
                 zip_buffer = io.BytesIO()
                 with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
@@ -398,7 +402,7 @@ elif mode == "📂 批量图片检测":
                         zip_file.writestr(item["filename"], item["bytes"])
                 
                 st.download_button(
-                    label="📦 下载所有预测结果 (ZIP)",
+                    label="📦 下载所有预测结果图 (ZIP)",
                     data=zip_buffer.getvalue(),
                     file_name="fish_batch_predicted_images.zip",
                     mime="application/zip",
@@ -406,7 +410,7 @@ elif mode == "📂 批量图片检测":
                     use_container_width=True
                 )
 
-    # ================= 图片翻页预览模块 =================
+    # ================= 逐张查看与单独下载模块 =================
     if "batch_results" in st.session_state and st.session_state["batch_results"]:
         st.divider()
         st.markdown("#### 🔍 逐张查看预测结果")
@@ -446,10 +450,20 @@ elif mode == "📂 批量图片检测":
                 st.rerun()
                 
         current_item = results[st.session_state["current_preview_index"]]
+        
+        # 显示图片
         st.image(
             current_item["bytes"], 
             caption=f"当前查看: {current_item['filename']}",
             use_container_width=True
+        )
+        
+        # 【单张图片单独下载】
+        st.download_button(
+            label=f"📥 下载当前单张结果图 ({current_item['filename']})",
+            data=current_item["bytes"],
+            file_name=current_item["filename"],
+            mime="image/jpeg"
         )
 
 elif mode == "🎬 视频智能追踪":
