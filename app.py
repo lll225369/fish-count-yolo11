@@ -136,7 +136,7 @@ with st.sidebar:
     st.divider()
 
 # 4. 渲染顶部 Banner 
-# 【关键修复】将 HTML 强制压缩为单行，杜绝被 Markdown 渲染为代码块的可能
+# 将 HTML 强制压缩为单行，杜绝被 Markdown 渲染为代码块的可能
 header_title = '<div class="header-text"><h1>🐟 水产鱼类智能分析计数工作站</h1><p><span>单图检测</span><span class="divider">|</span><span>批量图片统计</span><span class="divider">|</span><span>视频微小目标追踪</span></p></div>'
 
 if banner_style == "🌊 动感水波纹理":
@@ -156,7 +156,6 @@ elif banner_style == "📊 极客状态监控":
     st.markdown(html_code, unsafe_allow_html=True)
 
 elif banner_style == "🎯 科技矢量图标":
-    # 去掉了所有前导缩进
     html_code = f'''<div class="main-header" style="justify-content: space-between;">
 <div style="z-index: 1; animation: float 6s ease-in-out infinite;">
 <svg width="80" height="80" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -203,6 +202,14 @@ elif banner_style == "🏫 自定义校徽 (需上传)":
 <img src="{right_src}" style="height: 80px; max-width: 120px; object-fit: contain; margin: 0 20px; z-index: 1; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));">
 </div>'''
     st.markdown(html_code, unsafe_allow_html=True)
+
+# --- 【关键修复】加载 YOLO 模型 ---
+@st.cache_resource
+def load_yolo_model():
+    # 这里默认加载 yolov11n.pt，如果你有自己训练的 best.pt，请修改这里
+    return YOLO('yolo11n.pt') 
+
+model = load_yolo_model()
 
 # 5. 侧边栏 —— 控制面板与参数
 with st.sidebar:
