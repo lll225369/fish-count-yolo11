@@ -136,7 +136,6 @@ with st.sidebar:
     st.divider()
 
 # 4. 渲染顶部 Banner 
-# 将 HTML 强制压缩为单行，杜绝被 Markdown 渲染为代码块的可能
 header_title = '<div class="header-text"><h1>🐟 水产鱼类智能分析计数工作站</h1><p><span>单图检测</span><span class="divider">|</span><span>批量图片统计</span><span class="divider">|</span><span>视频微小目标追踪</span></p></div>'
 
 if banner_style == "🌊 动感水波纹理":
@@ -203,10 +202,10 @@ elif banner_style == "🏫 自定义校徽 (需上传)":
 </div>'''
     st.markdown(html_code, unsafe_allow_html=True)
 
-# --- 【关键修复】加载 YOLO 模型 ---
+# --- 加载 YOLO 模型 ---
 @st.cache_resource
 def load_yolo_model():
-    # 这里默认加载 yolov11n.pt，如果你有自己训练的 best.pt，请修改这里
+    # 【!!! 注意 !!!】如果你有自己的模型，请修改下面的 'yolo11n.pt' 为你的文件名
     return YOLO('yolo11n.pt') 
 
 model = load_yolo_model()
@@ -266,7 +265,6 @@ with st.sidebar:
         if video_mode == "小目标（SAHI 切片）":
             st.markdown("---")
             
-            # --- 切片宽度双向联动 ---
             if "slice_w_val" not in st.session_state:
                 st.session_state.slice_w_val = 512
                 st.session_state.w_slider = 512
@@ -295,7 +293,6 @@ with st.sidebar:
                 st.button("🔄", key="reset_w_btn", on_click=reset_w, help="恢复默认值 (512)")
             slice_width = st.session_state.slice_w_val
 
-            # --- 切片高度双向联动 ---
             if "slice_h_val" not in st.session_state:
                 st.session_state.slice_h_val = 512
                 st.session_state.h_slider = 512
@@ -324,7 +321,6 @@ with st.sidebar:
                 st.button("🔄", key="reset_h_btn", on_click=reset_h, help="恢复默认值 (512)")
             slice_height = st.session_state.slice_h_val
 
-            # --- 重叠率双向联动 ---
             if "overlap_val" not in st.session_state:
                 st.session_state.overlap_val = 0.20
                 st.session_state.o_slider = 0.20
@@ -381,7 +377,8 @@ if mode == "📷 单张图像检测":
     up_img = st.file_uploader("请拖拽或选择单张图片", type=["jpg", "jpeg", "png"])
     
     if up_img:
-        img = Image.open(up_img)
+        # 【修复】强制转换为 RGB 模式，去掉透明通道，防止模型无法识别
+        img = Image.open(up_img).convert('RGB')
         
         if "current_img_name" not in st.session_state or st.session_state.current_img_name != up_img.name:
             st.session_state.current_img_name = up_img.name
@@ -441,7 +438,8 @@ elif mode == "📂 批量图片检测":
             image_results_bytes = []
             
             for i, file in enumerate(uploaded_files):
-                img = Image.open(file)
+                # 【修复】强制转换为 RGB 模式
+                img = Image.open(file).convert('RGB')
                 results = model(img, conf=conf_threshold)
                 res = results[0] if isinstance(results, list) else results
                 
@@ -480,7 +478,6 @@ elif mode == "📂 批量图片检测":
             st.markdown("#### 📑 批量统计报表")
             st.dataframe(df, use_container_width=True)
             
-            # ================= 导出功能模块 =================
             st.markdown("#### 📥 结果导出")
             col_excel, col_zip = st.columns(2)
             
@@ -511,7 +508,6 @@ elif mode == "📂 批量图片检测":
                     use_container_width=True
                 )
 
-    # ================= 逐张查看与单独下载模块 =================
     if "batch_results" in st.session_state and st.session_state["batch_results"]:
         st.divider()
         st.markdown("#### 🔍 逐张查看预测结果")
