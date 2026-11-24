@@ -829,7 +829,7 @@ elif mode == "🎬 视频智能追踪":
             c3.metric("📊 已处理帧数", f"{frame_count} 帧")
             
             # ✅ 轨迹明细表（可核对每一条鱼）
-                       with st.expander("📋 查看每条鱼的轨迹明细", expanded=False):
+            with st.expander("📋 查看每条鱼的轨迹明细", expanded=False):
                 if valid_tracks:
                     df_tracks = pd.DataFrame([
                         {
