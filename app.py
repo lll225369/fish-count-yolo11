@@ -600,7 +600,8 @@ elif mode == "🎬 视频智能追踪":
     up_video = st.file_uploader("请上传视频文件", type=["mp4", "avi", "mov", "mkv"])
     
     # ==========================================
-    # ✅ 核心参数：最小有效轨迹帧数（滑块+数字+重置）
+       # ==========================================
+    # ✅ 核心参数：最小有效轨迹帧数（最大值已调至 300）
     # ==========================================
     if "min_track_frames_val" not in st.session_state:
         st.session_state.min_track_frames_val = 10
@@ -623,9 +624,9 @@ elif mode == "🎬 视频智能追踪":
     st.markdown("**最小有效轨迹帧数 (过滤误检)**")
     col_t1, col_t2, col_t3 = st.columns([3, 1.5, 1])
     with col_t1:
-        st.slider("TrackFrames", min_value=1, max_value=60, value=st.session_state.min_track_frames_val, step=1, label_visibility="collapsed", key="min_track_frames_slider", on_change=sync_track_slider)
+        st.slider("TrackFrames", min_value=1, max_value=300, value=st.session_state.min_track_frames_val, step=1, label_visibility="collapsed", key="min_track_frames_slider", on_change=sync_track_slider)
     with col_t2:
-        st.number_input("TrackFramesNum", min_value=1, max_value=60, value=st.session_state.min_track_frames_val, step=1, label_visibility="collapsed", key="min_track_frames_num", on_change=sync_track_num)
+        st.number_input("TrackFramesNum", min_value=1, max_value=300, value=st.session_state.min_track_frames_val, step=1, label_visibility="collapsed", key="min_track_frames_num", on_change=sync_track_num)
     with col_t3:
         st.button("🔄", key="reset_track_btn", on_click=reset_track, help="恢复默认值 (10)")
 
@@ -636,7 +637,7 @@ elif mode == "🎬 视频智能追踪":
     with st.expander("🔍 如何设置该参数？（调参建议）", expanded=False):
         st.markdown("""
         *   **常规场景**：`10` ~ `15` 帧（首选基准，能过滤绝大多数水波噪点）。
-        *   **水质浑浊/反光严重（假鱼很多）**：`20` ~ `30` 帧，要求目标存活更久才计入。
+        *   **水质浑浊/反光严重（假鱼很多）**：`20` ~ `60` 帧，要求目标存活更久才计入。
         *   **鱼群密集/游速极快/小目标**：`5` ~ `8` 帧，防止漏算游得快的真鱼。
         """)
 
