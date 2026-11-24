@@ -746,7 +746,7 @@ elif mode == "🎬 视频智能追踪":
                     cv2.putText(annotated_frame, f"Fish: {len(detections)}", (20, 50), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (0, 255, 0), 3)
                     out.write(annotated_frame)
                     
-                                        frame_count += 1
+                    frame_count += 1
                     if frame_count % 5 == 0 or frame_count == process_frames:
                         current_fish = len(detections)
                         progress_bar.progress(min(frame_count / process_frames, 1.0), text=f"正在处理: {frame_count}/{process_frames} 帧")
