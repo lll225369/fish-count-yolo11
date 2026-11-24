@@ -600,13 +600,12 @@ elif mode == "🎬 视频智能追踪":
     up_video = st.file_uploader("请上传视频文件", type=["mp4", "avi", "mov", "mkv"])
     
     # ==========================================
-       # ==========================================
-    # ✅ 核心参数：最小有效轨迹帧数（最大值已调至 300）
+    # 核心参数 1：最小有效轨迹帧数
     # ==========================================
     if "min_track_frames_val" not in st.session_state:
-        st.session_state.min_track_frames_val = 10
-        st.session_state.min_track_frames_slider = 10
-        st.session_state.min_track_frames_num = 10
+        st.session_state.min_track_frames_val = 15
+        st.session_state.min_track_frames_slider = 15
+        st.session_state.min_track_frames_num = 15
 
     def sync_track_slider():
         st.session_state.min_track_frames_val = st.session_state.min_track_frames_slider
@@ -617,30 +616,46 @@ elif mode == "🎬 视频智能追踪":
         st.session_state.min_track_frames_slider = st.session_state.min_track_frames_num
         
     def reset_track():
-        st.session_state.min_track_frames_val = 10
-        st.session_state.min_track_frames_slider = 10
-        st.session_state.min_track_frames_num = 10
+        st.session_state.min_track_frames_val = 15
+        st.session_state.min_track_frames_slider = 15
+        st.session_state.min_track_frames_num = 15
 
-    st.markdown("**最小有效轨迹帧数 (过滤误检)**")
+    st.markdown("**最小有效轨迹帧数 (过滤一闪而过的假鱼)**")
     col_t1, col_t2, col_t3 = st.columns([3, 1.5, 1])
     with col_t1:
         st.slider("TrackFrames", min_value=1, max_value=300, value=st.session_state.min_track_frames_val, step=1, label_visibility="collapsed", key="min_track_frames_slider", on_change=sync_track_slider)
     with col_t2:
         st.number_input("TrackFramesNum", min_value=1, max_value=300, value=st.session_state.min_track_frames_val, step=1, label_visibility="collapsed", key="min_track_frames_num", on_change=sync_track_num)
     with col_t3:
-        st.button("🔄", key="reset_track_btn", on_click=reset_track, help="恢复默认值 (10)")
+        st.button("🔄", key="reset_track_btn", on_click=reset_track, help="恢复默认值 (15)")
 
     min_track_frames = st.session_state.min_track_frames_val
 
-    # 提示信息与调参建议
-    st.caption(f"💡 当前阈值相当于：要求目标在画面中存活约 **{min_track_frames/30:.2f} 秒**（按 30 帧/秒 估算）。")
-    with st.expander("🔍 如何设置该参数？（调参建议）", expanded=False):
-        st.markdown("""
-        *   **常规场景**：`10` ~ `15` 帧（首选基准，能过滤绝大多数水波噪点）。
-        *   **水质浑浊/反光严重（假鱼很多）**：`20` ~ `60` 帧，要求目标存活更久才计入。
-        *   **鱼群密集/游速极快/小目标**：`5` ~ `8` 帧，防止漏算游得快的真鱼。
-        """)
+    # ==========================================
+    # 核心参数 2：最小鱼框面积
+    # ==========================================
+    if "min_area_val" not in st.session_state:
+        st.session_state.min_area_val = 200
+        st.session_state.min_area_num = 200
 
+    def sync_area():
+        st.session_state.min_area_val = st.session_state.min_area_num
+
+    def reset_area():
+        st.session_state.min_area_val = 200
+        st.session_state.min_area_num = 200
+
+    st.markdown("**最小鱼框面积 (过滤水波/反光噪点)**")
+    col_a1, col_a2 = st.columns([4, 1])
+    with col_a1:
+        st.number_input("MinArea", min_value=10, max_value=20000, value=st.session_state.min_area_val, step=50, label_visibility="collapsed", key="min_area_num", on_change=sync_area)
+    with col_a2:
+        st.button("🔄", key="reset_area_btn", on_click=reset_area, help="恢复默认值 (200)")
+
+    min_box_area = st.session_state.min_area_val
+
+    st.caption(f"💡 当前阈值：目标至少存活 **{min_track_frames/30:.2f} 秒**，且面积大于 **{min_box_area}** 像素才计入。")
+    
     # ==========================================
     # 视频处理与追踪逻辑
     # ==========================================
@@ -665,7 +680,11 @@ elif mode == "🎬 视频智能追踪":
             
             use_sahi = True if video_mode == "小目标（SAHI 切片）" else False
             
-            tracker = ByteTrackTracker()
+            try:
+                tracker = ByteTrackTracker(track_buffer=60)
+            except:
+                tracker = ByteTrackTracker()
+                
             box_annotator = sv.BoxAnnotator(thickness=2)
             label_annotator = sv.LabelAnnotator(text_scale=0.5, text_padding=2)
             
@@ -677,8 +696,6 @@ elif mode == "🎬 视频智能追踪":
             frame_placeholder = st.empty()
             
             frame_count = 0
-            
-            # 记录每条轨迹的生命周期
             track_info = {}
             
             try:
@@ -689,8 +706,14 @@ elif mode == "🎬 视频智能追踪":
                     
                     frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
                     detections = predict_frame(frame_rgb, use_sahi=use_sahi)
-                    detections = tracker.update(detections)
                     
+                    # 过滤面积太小的框
+                    if len(detections) > 0:
+                        areas = detections.area
+                        mask = areas >= min_box_area
+                        detections = detections[mask]
+                    
+                    detections = tracker.update(detections)
                     frame_bgr = cv2.cvtColor(frame_rgb, cv2.COLOR_RGB2BGR)
                     
                     labels = []
@@ -714,29 +737,19 @@ elif mode == "🎬 视频智能追踪":
                                 labels.append(class_name)
                     else:
                         if hasattr(detections, 'class_id') and detections.class_id is not None:
-                            labels = [model.names[int(cid)] if hasattr(model, 'names') else "fish"
-                                      for cid in detections.class_id]
+                            labels = [model.names[int(cid)] if hasattr(model, 'names') else "fish" for cid in detections.class_id]
                         else:
                             labels = ["fish"] * len(detections)
                     
                     annotated_frame = box_annotator.annotate(scene=frame_bgr, detections=detections)
-                    annotated_frame = label_annotator.annotate(
-                        scene=annotated_frame, detections=detections, labels=labels
-                    )
+                    annotated_frame = label_annotator.annotate(scene=annotated_frame, detections=detections, labels=labels)
                     
                     out.write(annotated_frame)
                     
                     frame_count += 1
                     if frame_count % 5 == 0 or frame_count == process_frames:
-                        progress_bar.progress(
-                            min(frame_count / process_frames, 1.0),
-                            text=f"正在处理: {frame_count}/{process_frames} 帧"
-                        )
-                        frame_placeholder.image(
-                            cv2.cvtColor(annotated_frame, cv2.COLOR_BGR2RGB),
-                            caption=f"实时处理预览（已追踪 ID: {len(track_info)} 个）",
-                            width=600
-                        )
+                        progress_bar.progress(min(frame_count / process_frames, 1.0), text=f"正在处理: {frame_count}/{process_frames} 帧")
+                        frame_placeholder.image(cv2.cvtColor(annotated_frame, cv2.COLOR_BGR2RGB), caption=f"实时处理预览（已追踪 ID: {len(track_info)} 个）", width=600)
                     
                     del frame, frame_rgb, frame_bgr, detections, annotated_frame
                     gc.collect()
@@ -750,153 +763,80 @@ elif mode == "🎬 视频智能追踪":
                     pass
             
             progress_bar.progress(1.0, text="✅ 视频处理完成！")
-            st.success("视频追踪处理完毕！")
             
-            # 过滤并统计最终数量
-            valid_tracks = {
-                tid: info for tid, info in track_info.items()
-                if info['frames_seen'] >= min_track_frames
-            }
-            unique_fish_count = len(valid_tracks)
+            # 生成结果数据
+            valid_tracks = {tid: info for tid, info in track_info.items() if info['frames_seen'] >= min_track_frames}
             
-            if unique_fish_count == 0:
-                st.error("⚠️ 视频中未追踪到任何目标！请确认你的模型是否为鱼类模型！或尝试降低『最小有效轨迹帧数』。")
-            
-            c1, c2, c3 = st.columns(3)
-            c1.metric("🐟 独立鱼类数量", f"{unique_fish_count} 条")
-            c2.metric("🎯 检测到的轨迹总数", f"{len(track_info)} 条")
-            c3.metric("📊 已处理帧数", f"{frame_count} 帧")
-            
-            with st.expander("📋 查看每条鱼的轨迹明细", expanded=False):
-                if valid_tracks:
-                    df_tracks = pd.DataFrame([
-                        {
-                            "轨迹ID": tid,
-                            "类别": info['class_name'],
-                            "首次出现帧": info['first_frame'],
-                            "最后出现帧": info['last_frame'],
-                            "被追踪帧数": info['frames_seen'],
-                            "停留时长(秒)": round((info['last_frame'] - info['first_frame']) / max(fps, 1), 2)
-                        }
-                        for tid, info in sorted(valid_tracks.items(), key=lambda x: x[1]['first_frame'])
-                    ])
-                    st.dataframe(df_tracks, use_container_width=True)
-                    
-                    csv_bytes = df_tracks.to_csv(index=False).encode("utf-8-sig")
-                    st.download_button(
-                        "📄 下载轨迹明细 CSV",
-                        data=csv_bytes,
-                        file_name="fish_tracking_details.csv",
-                        mime="text/csv"
-                    )
-                else:
-                    st.info("暂无有效轨迹（可尝试调低『最小有效轨迹帧数』）")
+            df_tracks = pd.DataFrame([
+                {
+                    "轨迹ID": tid,
+                    "类别": info['class_name'],
+                    "首次出现帧": info['first_frame'],
+                    "最后出现帧": info['last_frame'],
+                    "被追踪帧数": info['frames_seen'],
+                    "停留时长(秒)": round((info['last_frame'] - info['first_frame']) / max(fps, 1), 2),
+                    "是否有效": "✅ 计入" if info['frames_seen'] >= min_track_frames else "❌ 已过滤"
+                }
+                for tid, info in sorted(track_info.items(), key=lambda x: x[1]['frames_seen'], reverse=True)
+            ])
             
             with open(out_path, "rb") as f:
                 video_bytes = f.read()
-            
-            st.download_button(
-                label="📥 下载追踪后的视频",
-                data=video_bytes,
-                file_name="fish_tracked_video.mp4",
-                mime="video/mp4",
-                type="primary"
-            )
-            
-            st.video(video_bytes)
-            
-            try:
-                os.unlink(out_path)
-            except:
-                pass
-            
-            progress_bar.progress(1.0, text="✅ 视频处理完成！")
-            st.success("视频追踪处理完毕！")
-            
-            # ✅ 最终统计：过滤掉帧数过少的误检，剩下的唯一 ID 数量才是真实鱼数
-            valid_tracks = {
-                tid: info for tid, info in track_info.items()
-                if info['frames_seen'] >= min_track_frames
-            }
-            unique_fish_count = len(valid_tracks)
-            
-            if unique_fish_count == 0:
-                st.error("⚠️ 视频中未追踪到任何目标！请确认你的模型是否为鱼类模型！或尝试降低『最小有效轨迹帧数』。")
-            
-            # ✅ 展示统计结果
-            c1, c2, c3 = st.columns(3)
-            c1.metric("🐟 独立鱼类数量", f"{unique_fish_count} 条")
-            c2.metric("🎯 检测到的轨迹总数", f"{len(track_info)} 条")
-            c3.metric("📊 已处理帧数", f"{frame_count} 帧")
-            
-            # ✅ 轨迹明细表（可核对每一条鱼）
-            with st.expander("📋 查看每条鱼的轨迹明细", expanded=False):
-                if valid_tracks:
-                    df_tracks = pd.DataFrame([
-                        {
-                            "轨迹ID": tid,
-                            "类别": info['class_name'],
-                            "首次出现帧": info['first_frame'],
-                            "最后出现帧": info['last_frame'],
-                            "被追踪帧数": info['frames_seen'],
-                            "停留时长(秒)": round((info['last_frame'] - info['first_frame']) / max(fps, 1), 2)
-                        }
-                        for tid, info in sorted(valid_tracks.items(), key=lambda x: x[1]['first_frame'])
-                    ])
-                    st.dataframe(df_tracks, use_container_width=True)
-                    
-                    csv_bytes = df_tracks.to_csv(index=False).encode("utf-8-sig")
-                    st.download_button(
-                        label="📄 下载轨迹明细 CSV",
-                        data=csv_bytes,
-                        file_name="fish_tracking_details.csv",
-                        mime="text/csv",
-                        key="download_track_csv_btn"
-                    )
-                else:
-                    st.info("暂无有效轨迹（可尝试调低『最小有效轨迹帧数』）")
-            
-            with open(out_path, "rb") as f:
-                video_bytes = f.read()
-            
-            st.download_button(
-                label="📥 下载追踪后的视频",
-                data=video_bytes,
-                file_name="fish_tracked_video.mp4",
-                mime="video/mp4",
-                type="primary",
-                key="download_tracked_video_btn"
-            )
-            
-            st.video(video_bytes)
-            
-            try:
-                os.unlink(out_path)
-            except:
-                pass
-            
-            progress_bar.progress(1.0, text="✅ 视频处理完成！")
-            st.success("视频追踪处理完毕！")
-            
-            if total_fish_count == 0:
-                st.error("⚠️ 视频中未追踪到任何目标！请确认你的模型是否为鱼类模型！")
                 
-            st.metric(label="📊 追踪统计（累加值）", value=f"共追踪到 {total_fish_count} 次目标出现")
-            
-            with open(out_path, "rb") as f:
-                video_bytes = f.read()
-            
-            st.download_button(
-                label="📥 下载追踪后的视频",
-                data=video_bytes,
-                file_name="fish_tracked_video.mp4",
-                mime="video/mp4",
-                type="primary"
-            )
-            
-            st.video(video_bytes)
+            # 存入 session_state
+            st.session_state["video_result"] = {
+                "video_bytes": video_bytes,
+                "df_tracks": df_tracks,
+                "unique_fish_count": len(valid_tracks),
+                "total_tracks": len(track_info),
+                "frame_count": frame_count,
+                "min_frames_used": min_track_frames
+            }
             
             try:
                 os.unlink(out_path)
             except:
                 pass
+                
+            st.rerun() # 触发页面刷新以显示结果
+
+    # ==========================================
+    # 结果展示区（独立于上传和按钮之外）
+    # ==========================================
+    if "video_result" in st.session_state:
+        res = st.session_state["video_result"]
+        st.success("视频追踪处理完毕！")
+        
+        if res["unique_fish_count"] == 0:
+            st.error(f"⚠️ 共发现 {res['total_tracks']} 个目标，但它们都没能达到设定的最低存活帧数（{res['min_frames_used']} 帧），因此被全部过滤掉了！\n\n👉 **解决办法**：点击下方『查看轨迹明细』，看一看『被追踪帧数』这一列的最大值是多少（比如最大值是 12），然后把你上方的『最小有效轨迹帧数』调成比 12 小的值（如 10 或 5）。")
+            
+        c1, c2, c3 = st.columns(3)
+        c1.metric("🐟 独立鱼类数量", f"{res['unique_fish_count']} 条")
+        c2.metric("🎯 原始轨迹总数", f"{res['total_tracks']} 条")
+        c3.metric("📊 已处理帧数", f"{res['frame_count']} 帧")
+        
+        with st.expander("📋 查看轨迹明细（含已过滤的误检）", expanded=True):
+            st.dataframe(res["df_tracks"], use_container_width=True)
+            csv_bytes = res["df_tracks"].to_csv(index=False).encode("utf-8-sig")
+            st.download_button(
+                label="📄 下载轨迹明细 CSV",
+                data=csv_bytes,
+                file_name="fish_tracking_details.csv",
+                mime="text/csv",
+                key="dl_csv_res"
+            )
+        
+        st.download_button(
+            label="📥 下载追踪后的视频",
+            data=res["video_bytes"],
+            file_name="fish_tracked_video.mp4",
+            mime="video/mp4",
+            type="primary",
+            key="dl_video_res"
+        )
+        
+        st.video(res["video_bytes"])
+        
+        if st.button("🗑️ 清空当前结果并重新测试", type="secondary"):
+            del st.session_state["video_result"]
+            st.rerun()
