@@ -743,13 +743,14 @@ elif mode == "🎬 视频智能追踪":
                     
                     annotated_frame = box_annotator.annotate(scene=frame_bgr, detections=detections)
                     annotated_frame = label_annotator.annotate(scene=annotated_frame, detections=detections, labels=labels)
-                    
+                    cv2.putText(annotated_frame, f"Fish: {len(detections)}", (20, 50), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (0, 255, 0), 3)
                     out.write(annotated_frame)
                     
-                    frame_count += 1
+                                        frame_count += 1
                     if frame_count % 5 == 0 or frame_count == process_frames:
+                        current_fish = len(detections)
                         progress_bar.progress(min(frame_count / process_frames, 1.0), text=f"正在处理: {frame_count}/{process_frames} 帧")
-                        frame_placeholder.image(cv2.cvtColor(annotated_frame, cv2.COLOR_BGR2RGB), caption=f"实时处理预览（已追踪 ID: {len(track_info)} 个）", width=600)
+                        frame_placeholder.image(cv2.cvtColor(annotated_frame, cv2.COLOR_BGR2RGB), caption=f"实时预览：当前画面 {current_fish} 条鱼 | 累计 ID: {len(track_info)} 个", width=600)
                     
                     del frame, frame_rgb, frame_bgr, detections, annotated_frame
                     gc.collect()
