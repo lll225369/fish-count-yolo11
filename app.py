@@ -850,6 +850,7 @@ elif mode == "🎬 视频智能追踪":
                         data=csv_bytes,
                         file_name="fish_tracking_details.csv",
                         mime="text/csv"
+                        key="download_track_csv_btn" 
                     )
                 else:
                     st.info("暂无有效轨迹（可尝试调低『最小有效轨迹帧数』）")
@@ -864,6 +865,7 @@ elif mode == "🎬 视频智能追踪":
                 file_name="fish_tracked_video.mp4",
                 mime="video/mp4",
                 type="primary"
+                 key="download_tracked_video_btn"
             )
             
             st.video(video_bytes)
